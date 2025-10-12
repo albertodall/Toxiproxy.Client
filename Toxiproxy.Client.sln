@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toxiproxy.Client", "src\Toxiproxy.Client\Toxiproxy.Client.csproj", "{B51B90CD-CB8D-E295-10CE-2A87F239D40D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toxiproxy.Client.Tests", "test\Toxiproxy.Client.Tests\Toxiproxy.Client.Tests.csproj", "{7AE115D3-72A7-4660-BA0E-D11FF1375D31}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B51B90CD-CB8D-E295-10CE-2A87F239D40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B51B90CD-CB8D-E295-10CE-2A87F239D40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B51B90CD-CB8D-E295-10CE-2A87F239D40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B51B90CD-CB8D-E295-10CE-2A87F239D40D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AE115D3-72A7-4660-BA0E-D11FF1375D31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AE115D3-72A7-4660-BA0E-D11FF1375D31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AE115D3-72A7-4660-BA0E-D11FF1375D31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AE115D3-72A7-4660-BA0E-D11FF1375D31}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA301599-1AB7-4374-AFA8-4EDE0C003C0E}
+	EndGlobalSection
+EndGlobal
