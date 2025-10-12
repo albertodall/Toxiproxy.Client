@@ -6,11 +6,8 @@ namespace Toxiproxy.Client
 {
     public abstract class Toxic
     {
-        private readonly Proxy _proxy;
-
-        protected Toxic(Proxy proxy, ToxicConfiguration config)
+        protected Toxic(ToxicConfiguration config)
         {
-            _proxy = proxy;
             Name = config.Name;
             Type = config.Type;
             Stream = config.Stream;
@@ -21,7 +18,7 @@ namespace Toxiproxy.Client
         public string Name { get; private set; } = string.Empty;
         public string Type { get; private set; } = string.Empty;
         public string Stream { get; private set; } = string.Empty;
-        public float Toxicity { get; private set; } = 1.0f;
+        public float Toxicity { get; set; } = 1.0f;
         protected Dictionary<string, object> Attributes { get; private set; } = [];
 
         public T GetAttribute<T>(string key)
@@ -46,19 +43,15 @@ namespace Toxiproxy.Client
             return default!;
         }
 
-        //private async Task UpdateToxicAsync<T>() where T : Toxic
-        //{
-        //    var json = JsonSerializer.Serialize(Attributes, JsonOptions.Default);
-        //    var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        //    var response = await ToxiproxyClient.HttpClient.PostAsync(
-        //        $"{_client.BaseUrl}/proxies/{_proxy.Name}/toxics/{Name}", content);
-        //    response.EnsureSuccessStatusCode();
-
-        //    var responseJson = await response.Content.ReadAsStringAsync();
-        //    var updatedToxic = JsonSerializer.Deserialize<T>(responseJson, JsonOptions.Default);
-        //    _data = updatedToxic;
-        //}
+        internal ToxicConfiguration Configuration => 
+            new()
+            {
+                Name = Name,
+                Type = Type,
+                Stream = Stream,
+                Toxicity = Toxicity,
+                Attributes = Attributes
+            };
 
         public override string ToString()
         {
