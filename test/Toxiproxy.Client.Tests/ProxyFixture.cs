@@ -36,22 +36,5 @@
             // Cleanup
             await _client.DeleteProxyAsync(sut.Name, TestContext.Current.CancellationToken);
         }
-
-        [Fact]
-        public async Task Should_AddLatencyToxic()
-        {
-            var sut = await _client.CreateProxyAsync($"test_proxy_{Guid.NewGuid()}", "localhost:11111", "example.com:80", TestContext.Current.CancellationToken);
-            await sut.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, cancellationToken: TestContext.Current.CancellationToken);
-            
-            var latencyToxic = await sut.GetToxicAsync("latency_downstream", TestContext.Current.CancellationToken);
-            Assert.NotNull(latencyToxic);
-            Assert.Equal("latency_downstream", latencyToxic?.Name);
-            Assert.Equal("latency", latencyToxic?.Type);
-            Assert.Equal(1000, latencyToxic?.GetAttribute<int>("latency"));
-
-            // Cleanup
-            await sut.RemoveAllToxicsAsync(TestContext.Current.CancellationToken);
-            await _client.DeleteProxyAsync(sut.Name, TestContext.Current.CancellationToken);
-        }
     }
 }

@@ -2,11 +2,11 @@
 {
     internal static class ToxicFactory
     {
-        public static Toxic CreateToxic(Proxy proxy, ToxicConfiguration config)
+        public static Toxic CreateToxic(ToxicConfiguration config)
         {
             return config.Type.ToLowerInvariant() switch
             {
-                "latency" => new LatencyToxic(proxy, config),
+                "latency" => new LatencyToxic(config),
                 //"bandwidth" => new BandwidthToxic(data),
                 //"timeout" => new TimeoutToxic(data),
                 //"slow_close" => new SlowCloseToxic(data),
@@ -17,9 +17,9 @@
             };
         }
 
-        public static T CreateToxic<T>(Proxy proxy, ToxicConfiguration data) where T : Toxic
+        public static T CreateToxic<T>(ToxicConfiguration data) where T : Toxic
         {
-            var toxic = CreateToxic(proxy, data);
+            var toxic = CreateToxic(data);
             if (toxic is T createdToxic)
             {
                 return createdToxic;

@@ -82,10 +82,15 @@ namespace Toxiproxy.Client
             _configuration = updatedProxyConfiguration;
         }
 
-        public async Task<Toxic?> GetToxicAsync(string name, CancellationToken cancellationToken = default)
+        public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
         {
-            var toxics = await GetToxicsAsync(cancellationToken);
-            return toxics.FirstOrDefault(t => t.Name == name);
+            var toxic = (await GetToxicsAsync(cancellationToken)).FirstOrDefault(t => t.Name == name);
+            if (toxic is not null)
+            {
+                return ToxicFactory.CreateToxic<T>(toxic.Configuration);
+            }
+
+            return null;
         }
 
         public async Task<Toxic[]> GetToxicsAsync(CancellationToken cancellationToken = default)
@@ -100,7 +105,32 @@ namespace Toxiproxy.Client
                 throw new JsonException("Failed to deserialize toxics data.");
             }
 
-            return toxicsData.Select(data => ToxicFactory.CreateToxic(this, data)).ToArray();
+            return toxicsData.Select(ToxicFactory.CreateToxic).ToArray();
+        }
+
+        public async Task UpdateToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var toxicConfig = JsonSerializer.Serialize(toxic.Configuration, JsonOptions.Default);
+                var content = new StringContent(toxicConfig, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response;
+                if (await ServerSupportsHttpPatchForProxyUpdates())
+                {
+                    response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{toxic.Name}", content, cancellationToken);
+                }
+                else
+                {
+                    response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{toxic.Name}", content, cancellationToken);
+                }
+
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new ToxiproxyConnectionException($"Failed to update toxic '{toxic.Name}' on proxy '{Name}'", ex);
+            }
         }
 
         public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
@@ -112,8 +142,8 @@ namespace Toxiproxy.Client
         public async Task RemoveAllToxicsAsync(CancellationToken cancellationToken = default)
         {
             var toxics = await GetToxicsAsync(cancellationToken);
-            var deleteTasks = toxics.Select(toxic => RemoveToxicAsync(toxic.Name));
-            await Task.WhenAll(deleteTasks);
+            var removeToxicsTasks = toxics.Select(toxic => RemoveToxicAsync(toxic.Name));
+            await Task.WhenAll(removeToxicsTasks);
         }
 
         public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, float toxicity, int latency, int jitter, CancellationToken cancellationToken = default)
@@ -149,7 +179,7 @@ namespace Toxiproxy.Client
                 throw new JsonException("Failed to deserialize the toxic data.");
             }
 
-            return ToxicFactory.CreateToxic(this, createdToxic);
+            return ToxicFactory.CreateToxic(createdToxic);
         }
 
         /// <summary>

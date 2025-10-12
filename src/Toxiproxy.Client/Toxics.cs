@@ -3,10 +3,18 @@ namespace Toxiproxy.Client
 {
     public sealed class LatencyToxic : Toxic
     {
-        internal LatencyToxic(Proxy proxy, ToxicConfiguration data) : base(proxy, data) 
+        internal LatencyToxic(ToxicConfiguration data) : base(data)
         { }
 
-        public int Latency => GetAttribute<int>("latency");
-        public int Jitter => GetAttribute<int>("jitter");
+        public int Latency
+        {
+            get => GetAttribute<int>("latency");
+            set => Attributes["latency"] = value;
+        }
+        public int Jitter
+        {
+            get => GetAttribute<int>("jitter");
+            set => Attributes["jitter"] = value;
+        }
     }
 }
