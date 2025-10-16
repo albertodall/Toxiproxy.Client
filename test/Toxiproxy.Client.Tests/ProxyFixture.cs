@@ -2,7 +2,7 @@
 {
     public sealed class ProxyFixture : IClassFixture<ToxiproxyTestFixture>
     {
-        private readonly ToxiproxyClient _client;
+        private ToxiproxyClient _client;
 
         public ProxyFixture(ToxiproxyTestFixture fixture)
         {

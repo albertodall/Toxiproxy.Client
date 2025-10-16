@@ -1,17 +1,20 @@
-﻿[assembly: CollectionBehavior(CollectionBehavior.CollectionPerAssembly)]
+﻿
+[assembly: CollectionBehavior(CollectionBehavior.CollectionPerAssembly)]
 
 namespace Toxiproxy.Client.Tests
 {
-    public sealed class ToxiproxyTestFixture
+    public sealed class ToxiproxyTestFixture : IAsyncLifetime
     {
         private const string Toxiproxy_Host = "localhost";
         private const int Toxiproxy_Port = 8474;
 
-        public ToxiproxyTestFixture()
+        public ToxiproxyClient Client { get; private set; } = default!;
+
+        public async ValueTask InitializeAsync()
         {
-            Client = new ToxiproxyClient(Toxiproxy_Host, Toxiproxy_Port);
+            Client = await ToxiproxyClient.ConnectToServerAsync(Toxiproxy_Host, Toxiproxy_Port);
         }
 
-        public ToxiproxyClient Client { get; private set; }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;       
     }
 }

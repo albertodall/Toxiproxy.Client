@@ -1,8 +1,8 @@
 ﻿namespace Toxiproxy.Client.Tests
 {
-    public sealed class LatencyToxicFixture : IClassFixture<ToxiproxyTestFixture>
+    public sealed class LatencyToxicFixture : IClassFixture<ToxiproxyTestFixture>, IAsyncLifetime
     {
-        private readonly ToxiproxyClient _client;
+        private ToxiproxyClient _client;
 
         public LatencyToxicFixture(ToxiproxyTestFixture fixture)
         {
@@ -23,7 +23,6 @@
 
             // Cleanup
             await proxy.RemoveAllToxicsAsync(TestContext.Current.CancellationToken);
-            await _client.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -41,7 +40,6 @@
 
             // Cleanup
             await proxy.RemoveAllToxicsAsync(TestContext.Current.CancellationToken);
-            await _client.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -59,7 +57,14 @@
 
             // Cleanup
             await proxy.RemoveAllToxicsAsync(TestContext.Current.CancellationToken);
-            await _client.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
+        }
+
+        public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+
+        public async ValueTask DisposeAsync()
+        {
+            var proxies = await _client.GetProxiesAsync(TestContext.Current.CancellationToken);
+            await Task.WhenAll(proxies.Select(p => _client.DeleteProxyAsync(p.Name, TestContext.Current.CancellationToken)));
         }
     }
 }

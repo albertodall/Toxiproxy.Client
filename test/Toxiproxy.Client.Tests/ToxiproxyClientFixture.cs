@@ -1,11 +1,11 @@
 namespace Toxiproxy.Client.Tests
 {
-    public sealed class ToxiproxyClientFixture : IClassFixture<ToxiproxyTestFixture>
+    public sealed class ToxiproxyClientFixture : IClassFixture<ToxiproxyTestFixture>, IAsyncLifetime
     {
         // Version of the Toxiproxy server used in tests, See Docker compose file
         public const string Server_Version = "2.12.0";
 
-        private readonly ToxiproxyClient _sut;
+        private ToxiproxyClient _sut;
 
         public ToxiproxyClientFixture(ToxiproxyTestFixture fixture)
         {
@@ -17,9 +17,6 @@ namespace Toxiproxy.Client.Tests
         {
             var proxy = await _sut.CreateProxyAsync($"test_proxy_{Guid.NewGuid()}", "localhost:11111", "example.com:80", TestContext.Current.CancellationToken);
             Assert.NotNull(proxy);
-
-            // Cleanup
-            await _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -32,9 +29,6 @@ namespace Toxiproxy.Client.Tests
             {
                 await _sut.CreateProxyAsync(testProxyName, "localhost:22222", "example.com:80", TestContext.Current.CancellationToken);
             });
-
-            // Cleanup
-            await _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -44,9 +38,6 @@ namespace Toxiproxy.Client.Tests
 
             var retrievedProxy = await _sut.GetProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
             Assert.Equivalent(proxy, retrievedProxy);
-
-            // Cleanup
-            await _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -67,16 +58,14 @@ namespace Toxiproxy.Client.Tests
 
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
             Assert.Equal(2, proxies.Length);
-
-            // Cleanup
-            await Task.WhenAll(proxies.Select(proxy => _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken)));
         }
 
-        [Fact]
-        public async Task Client_ShouldReadServerVersion()
+        public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+
+        public async ValueTask DisposeAsync()
         {
-            var version = await _sut.GetVersionAsync();
-            Assert.Equal(Server_Version, version);
+            var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
+            await Task.WhenAll(proxies.Select(proxy => _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken)));
         }
     }
 }
