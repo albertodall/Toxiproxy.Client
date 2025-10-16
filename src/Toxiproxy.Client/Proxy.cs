@@ -61,7 +61,7 @@ namespace Toxiproxy.Client
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response;
-            if (await ServerSupportsHttpPatchForProxyUpdates())
+            if (ServerSupportsHttpPatchForProxyUpdates)
             {
                 response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
             }
@@ -116,7 +116,7 @@ namespace Toxiproxy.Client
                 var content = new StringContent(toxicConfig, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
-                if (await ServerSupportsHttpPatchForProxyUpdates())
+                if (ServerSupportsHttpPatchForProxyUpdates)
                 {
                     response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{toxic.Name}", content, cancellationToken);
                 }
@@ -190,14 +190,14 @@ namespace Toxiproxy.Client
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
         /// <returns><see cref="true"/> if server version is 2.6.0 or above.</returns>
-        private async Task<bool> ServerSupportsHttpPatchForProxyUpdates()
-        {
-            Version supportsPatchMethodForUpdates = new("2.6.0");
-
-            var serverVersion = new Version(await _client.GetVersionAsync());
-            return !(serverVersion.CompareTo(supportsPatchMethodForUpdates) < 0);
+        private bool ServerSupportsHttpPatchForProxyUpdates 
+        { 
+            get
+            {
+                const string supportsPatchMethodForUpdates = "2.6.0";
+                return string.Compare(_client.ServerVersion, supportsPatchMethodForUpdates, StringComparison.Ordinal) >= 0;
+            }
         }
-
     }
 
     public sealed record ProxyConfiguration

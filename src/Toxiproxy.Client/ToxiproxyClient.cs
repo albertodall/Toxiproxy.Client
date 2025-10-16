@@ -7,15 +7,39 @@ namespace Toxiproxy.Client
 {
     public sealed class ToxiproxyClient
     {
-        private readonly Lazy<Task<ServerVersion>> _serverVersion;
-
-        public ToxiproxyClient(string hostName = "localhost", int port = 8474)
+        private ToxiproxyClient(string baseUrl, string serverVersion)
         {
-            BaseUrl = $"http://{hostName}:{port}";
-            _serverVersion = new Lazy<Task<ServerVersion>>(GetServerVersionAsync());
+            BaseUrl = baseUrl;
+            ServerVersion = serverVersion;
+        }
+
+        public static async Task<ToxiproxyClient> ConnectToServerAsync(string hostName = "localhost", int port = 8474, CancellationToken cancellationToken = default)
+        {
+            string baseUrl = $"http://{hostName}:{port}";
+            string version;
+
+            try
+            {
+                var response = await HttpClient.GetAsync($"{baseUrl}/version", cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                var serverVersion = JsonSerializer.Deserialize<ServerVersion>(json, JsonOptions.Default);
+
+                version = serverVersion is null
+                    ? throw new JsonException("Failed to deserialize server version data.")
+                    : serverVersion.Version;
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new ToxiproxyConnectionException($"Unable to connect to Toxiproxy server at {baseUrl}.", ex);
+            }
+
+            return new ToxiproxyClient(baseUrl, version);
         }
 
         public string BaseUrl { get; private set; }
+        public string ServerVersion { get; private set; }
 
         /// <summary>
         /// <see cref="https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"/>
@@ -36,7 +60,6 @@ namespace Toxiproxy.Client
                     Upstream = upstream,
                     Enabled = true
                 };
-
 
                 var json = JsonSerializer.Serialize(newProxy, JsonOptions.Default);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -138,15 +161,6 @@ namespace Toxiproxy.Client
             }
         }
 
-        /// <summary>
-        /// Get the Toxiproxy server version.
-        /// </summary>
-        /// <returns>The Toxiproxy server version.</returns>
-        public async Task<string> GetVersionAsync()
-        {
-            return (await _serverVersion.Value).Version;
-        }
-
         public async Task ResetAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -156,32 +170,12 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException("Failed to reset Toxiproxy", ex);
-            }
-        }
-
-        private async Task<ServerVersion> GetServerVersionAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var response = await HttpClient.GetAsync($"{BaseUrl}/version", cancellationToken);
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync();
-                var serverVersion = JsonSerializer.Deserialize<ServerVersion>(json, JsonOptions.Default);
-
-                return serverVersion is null
-                    ? throw new JsonException("Failed to deserialize server version data.")
-                    : serverVersion;
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new ToxiproxyConnectionException("Failed to get Toxiproxy version", ex);
+                throw new ToxiproxyConnectionException($"Failed to reset Toxiproxy server at {BaseUrl}", ex);
             }
         }
     }
 
-    public sealed record ServerVersion
+    internal sealed record ServerVersion
     {
         [JsonPropertyName("version")]
         public string Version { get; set; } = string.Empty;
