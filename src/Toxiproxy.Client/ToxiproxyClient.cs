@@ -13,7 +13,7 @@ namespace Toxiproxy.Client
             ServerVersion = serverVersion;
         }
 
-        public static async Task<ToxiproxyClient> ConnectToServerAsync(string hostName = "localhost", int port = 8474, CancellationToken cancellationToken = default)
+        public static async Task<ToxiproxyClient> ConnectAsync(string hostName = "localhost", int port = 8474, CancellationToken cancellationToken = default)
         {
             string baseUrl = $"http://{hostName}:{port}";
             string version;
@@ -49,26 +49,27 @@ namespace Toxiproxy.Client
             Timeout = TimeSpan.FromSeconds(30)
         };
 
-        public async Task<Proxy> CreateProxyAsync(string name, string listen, string upstream, CancellationToken cancellationToken = default)
+        public Task<Proxy> ConfigureProxy(Action<ProxyConfiguration> builder, CancellationToken cancellationToken = default)
         {
+            var config = new ProxyConfiguration();
+            builder(config);
+            return AddProxyAsync(config, cancellationToken);
+        }
+
+        private async Task<Proxy> AddProxyAsync(ProxyConfiguration configuration, CancellationToken cancellationToken = default)
+        {
+            configuration.EnsureConfigurationIsValid();
+
             try
             {
-                var newProxy = new ProxyConfiguration
-                {
-                    Name = name,
-                    Listen = listen,
-                    Upstream = upstream,
-                    Enabled = true
-                };
-
-                var json = JsonSerializer.Serialize(newProxy, JsonOptions.Default);
+                var json = JsonSerializer.Serialize(configuration, JsonOptions.Default);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
 
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    throw new ToxiproxyException($"Proxy with name '{name}' already exists");
+                    throw new ToxiproxyException($"Proxy with name '{configuration.Name}' already exists");
                 }
 
                 response.EnsureSuccessStatusCode();
@@ -82,11 +83,11 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to create proxy '{name}'", ex);
+                throw new ToxiproxyConnectionException($"Failed to create proxy '{configuration.Name}'", ex);
             }
             catch (TaskCanceledException ex)
             {
-                throw new ToxiproxyConnectionException($"Request timeout while creating proxy '{name}'", ex);
+                throw new ToxiproxyConnectionException($"Request timeout while creating proxy '{configuration.Name}'", ex);
             }
         }
 
