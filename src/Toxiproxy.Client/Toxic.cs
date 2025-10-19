@@ -6,20 +6,18 @@ namespace Toxiproxy.Client
 {
     public abstract class Toxic
     {
-        protected Toxic(ToxicConfiguration config)
+        private readonly ToxicConfiguration _configuration;
+
+        protected Toxic(ToxicConfiguration configuration)
         {
-            Name = config.Name;
-            Type = config.Type;
-            Stream = config.Stream;
-            Toxicity = config.Toxicity;
-            Attributes = config.Attributes;
+            _configuration = configuration;
         }
 
-        public string Name { get; private set; } = string.Empty;
-        public string Type { get; private set; } = string.Empty;
-        public string Stream { get; private set; } = string.Empty;
-        public float Toxicity { get; set; } = 1.0f;
-        protected Dictionary<string, object> Attributes { get; private set; } = [];
+        public string Name => _configuration.Name;
+        public string Type => _configuration.Type;
+        public string Stream => _configuration.Stream;
+        public float Toxicity => _configuration.Toxicity;
+        protected Dictionary<string, object> Attributes => _configuration.Attributes;
 
         public T GetAttribute<T>(string key)
         {
@@ -43,15 +41,7 @@ namespace Toxiproxy.Client
             return default!;
         }
 
-        internal ToxicConfiguration Configuration => 
-            new()
-            {
-                Name = Name,
-                Type = Type,
-                Stream = Stream,
-                Toxicity = Toxicity,
-                Attributes = Attributes
-            };
+        internal ToxicConfiguration Configuration => _configuration;
 
         public override string ToString()
         {

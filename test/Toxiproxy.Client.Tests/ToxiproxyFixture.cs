@@ -3,7 +3,7 @@
 
 namespace Toxiproxy.Client.Tests
 {
-    public sealed class ToxiproxyTestFixture : IAsyncLifetime
+    public sealed class ToxiproxyFixture : IAsyncLifetime
     {
         private const string Toxiproxy_Host = "localhost";
         private const int Toxiproxy_Port = 8474;
@@ -12,7 +12,7 @@ namespace Toxiproxy.Client.Tests
 
         public async ValueTask InitializeAsync()
         {
-            Client = await ToxiproxyClient.ConnectToServerAsync(Toxiproxy_Host, Toxiproxy_Port);
+            Client = await ToxiproxyClient.ConnectAsync(Toxiproxy_Host, Toxiproxy_Port);
         }
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;       

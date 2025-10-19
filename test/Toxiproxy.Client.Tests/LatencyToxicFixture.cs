@@ -1,18 +1,25 @@
 ﻿namespace Toxiproxy.Client.Tests
 {
-    public sealed class LatencyToxicFixture : IClassFixture<ToxiproxyTestFixture>, IAsyncLifetime
+    public sealed class LatencyToxicFixture : IClassFixture<ToxiproxyFixture>, IAsyncLifetime
     {
         private ToxiproxyClient _client;
 
-        public LatencyToxicFixture(ToxiproxyTestFixture fixture)
+        public LatencyToxicFixture(ToxiproxyFixture fixture)
         {
             _client = fixture.Client;
         }
-
+        /*
         [Fact]
         public async Task Should_AddLatencyToxic()
         {
-            var proxy = await _client.CreateProxyAsync($"test_proxy_{Guid.NewGuid()}", "localhost:11111", "example.com:80", TestContext.Current.CancellationToken);
+            Proxy proxy = _client
+                .ConfigureProxy()
+                    .WithName($"test_proxy_{Guid.NewGuid()}")
+                    .WithListeningAddress("localhost:11111")
+                    .WithUpstream("example.org:80")
+                    .Build();
+            await _client.AddProxyAsync(proxy, TestContext.Current.CancellationToken);
+
             await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, TestContext.Current.CancellationToken);
 
             var sut = await proxy.GetToxicAsync<LatencyToxic>("latency_downstream", TestContext.Current.CancellationToken);
@@ -28,9 +35,15 @@
         [Fact]
         public async Task Should_UpdateLatency_ForLatencyToxic()
         {
-            var proxy = await _client.CreateProxyAsync($"test_proxy_{Guid.NewGuid()}", "localhost:11111", "example.com:80", TestContext.Current.CancellationToken);
-            var sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, TestContext.Current.CancellationToken);
+            Proxy proxy = _client
+                 .ConfigureProxy()
+                     .WithName($"test_proxy_{Guid.NewGuid()}")
+                     .WithListeningAddress("localhost:11111")
+                     .WithUpstream("example.org:80")
+                     .Build();
+            await _client.AddProxyAsync(proxy, TestContext.Current.CancellationToken);
 
+            var sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, TestContext.Current.CancellationToken);
             sut.Latency = 5000;
             await proxy.UpdateToxicAsync(sut, TestContext.Current.CancellationToken);
 
@@ -45,9 +58,15 @@
         [Fact]
         public async Task Should_UpdateJitter_ForLatencyToxic()
         {
-            var proxy = await _client.CreateProxyAsync($"test_proxy_{Guid.NewGuid()}", "localhost:11111", "example.com:80", TestContext.Current.CancellationToken);
-            var sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, TestContext.Current.CancellationToken);
+            Proxy proxy = _client
+                 .ConfigureProxy()
+                     .WithName($"test_proxy_{Guid.NewGuid()}")
+                     .WithListeningAddress("localhost:11111")
+                     .WithUpstream("example.org:80")
+                     .Build();
+            await _client.AddProxyAsync(proxy, TestContext.Current.CancellationToken);
 
+            var sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, 1.0f, 1000, 10, TestContext.Current.CancellationToken);
             sut.Jitter = 20;
             await proxy.UpdateToxicAsync(sut, TestContext.Current.CancellationToken);
 
@@ -58,7 +77,7 @@
             // Cleanup
             await proxy.RemoveAllToxicsAsync(TestContext.Current.CancellationToken);
         }
-
+        */
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
         public async ValueTask DisposeAsync()

@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
@@ -13,22 +12,13 @@ namespace Toxiproxy.Client
     public sealed class Proxy
     {
         private readonly ToxiproxyClient _client;
-        private ProxyConfiguration _configuration = new();
-
-        internal Proxy(ToxiproxyClient client, string name, string listen, string upstream, bool enabled = true)
-        {
-            _configuration.Name = name;
-            _configuration.Listen = listen;
-            _configuration.Upstream = upstream;
-            _configuration.Enabled = enabled;
-            _client = client;
-        }
+        private readonly ProxyConfiguration _configuration = new();
 
         internal Proxy(ToxiproxyClient client, ProxyConfiguration config)
-            : this(client, config.Name, config.Listen, config.Upstream, config.Enabled)
-        { }
-
-        internal ToxiproxyClient Client => _client;
+        { 
+            _client = client;
+            _configuration = config;
+        }
 
         // Core Proxy Properties
         public string Name => _configuration.Name;
@@ -36,50 +26,63 @@ namespace Toxiproxy.Client
         public string Upstream => _configuration.Upstream;
         public bool Enabled => _configuration.Enabled;
 
-        // Proxy Management Methods
-        public async Task UpdateUpstreamAsync(string upstream, CancellationToken cancellationToken = default)
+        internal ProxyConfiguration Configuration => _configuration;
+
+        public async Task SetNameAsync(string name, CancellationToken cancellationToken = default)
         {
-            var configUpdate = _configuration with { Upstream = upstream };
-            await UpdateProxyAsync(configUpdate, cancellationToken);
+            _configuration.Name = name;
+            await UpdateAsync(cancellationToken);
+        }
+
+        public async Task SetUpstreamAsync(string upstream, CancellationToken cancellationToken = default)
+        {
+            _configuration.Upstream = upstream;
+            await UpdateAsync(cancellationToken);
+        }
+
+        public async Task SetListeningAddressAsync(string listeningAddress, CancellationToken cancellationToken = default)
+        {
+            _configuration.Listen = listeningAddress;
+            await UpdateAsync(cancellationToken);
         }
 
         public async Task EnableAsync(CancellationToken cancellationToken = default)
         {
-            var configUpdate = _configuration with { Enabled = true };
-            await UpdateProxyAsync(configUpdate, cancellationToken);
+            _configuration.Enabled = true;
+            await UpdateAsync(cancellationToken);
         }
 
         public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
-            var configUpdate = _configuration with { Enabled = false };
-            await UpdateProxyAsync(configUpdate, cancellationToken);
+            _configuration.Enabled = false;
+            await UpdateAsync(cancellationToken);
         }
 
-        private async Task UpdateProxyAsync(ProxyConfiguration data, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(CancellationToken cancellationToken = default)
         {
-            var json = JsonSerializer.Serialize(data, JsonOptions.Default);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            _configuration.EnsureConfigurationIsValid();
 
-            HttpResponseMessage response;
-            if (ServerSupportsHttpPatchForProxyUpdates)
+            try
             {
-                response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
-            }
-            else
-            {
-                response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
-            }
+                var json = JsonSerializer.Serialize(_configuration, JsonOptions.Default);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            response.EnsureSuccessStatusCode();
+                HttpResponseMessage response;
+                if (ServerSupportsHttpPatchForProxyUpdates)
+                {
+                    response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
+                }
+                else
+                {
+                    response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
+                }
 
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var updatedProxyConfiguration = JsonSerializer.Deserialize<ProxyConfiguration>(responseJson, JsonOptions.Default);
-            if (updatedProxyConfiguration is null)
-            {
-                throw new JsonException("Failed to deserialize the updated proxy data.");
+                response.EnsureSuccessStatusCode();
             }
-            
-            _configuration = updatedProxyConfiguration;
+            catch (HttpRequestException ex)
+            {
+                throw new ToxiproxyConnectionException($"Failed to update proxy '{Name}'", ex);
+            }
         }
 
         public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
@@ -185,34 +188,19 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Starting from version 2.6.0, Toxiproxy server supports HTTP PATCH method for proxy updates, 
         /// and started deprecating updates using HTTP POST.
-        /// This method helps checking the server version so to allow using the preferred update HTTP method 
-        /// according to the server version, and we can support both ways without breaking.
+        /// This property checks the server version so to allow choosing the preferred update HTTP method 
+        /// according to the detected version, and we can support both ways without breaking.
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
-        /// <returns><see cref="true"/> if server version is 2.6.0 or above.</returns>
+        /// <returns>Returns <see cref="true"/> if server version is 2.6.0 or above.</returns>
         private bool ServerSupportsHttpPatchForProxyUpdates 
         { 
             get
             {
-                const string supportsPatchMethodForUpdates = "2.6.0";
-                return string.Compare(_client.ServerVersion, supportsPatchMethodForUpdates, StringComparison.Ordinal) >= 0;
+                Version supportsPatchMethodForUpdates = new("2.6.0");
+                return !(new Version(_client.ServerVersion).CompareTo(supportsPatchMethodForUpdates) < 0);
             }
         }
-    }
-
-    public sealed record ProxyConfiguration
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
-
-        [JsonPropertyName("listen")]
-        public string Listen { get; set; } = string.Empty;
-
-        [JsonPropertyName("upstream")]
-        public string Upstream { get; set; } = string.Empty;
-
-        [JsonPropertyName("enabled")]
-        public bool Enabled { get; set; }
     }
 }
 

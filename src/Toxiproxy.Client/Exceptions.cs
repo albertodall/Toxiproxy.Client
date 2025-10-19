@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Toxiproxy.Client
+﻿namespace Toxiproxy.Client
 {
     public class ToxiproxyException : Exception
     {
@@ -8,7 +6,7 @@ namespace Toxiproxy.Client
         public ToxiproxyException(string message, Exception innerException) : base(message, innerException) { }
     }
 
-    public class ToxiproxyConnectionException : ToxiproxyException
+    public sealed class ToxiproxyConnectionException : ToxiproxyException
     {
         public ToxiproxyConnectionException(string message)
             : base($"Failed to connect to Toxiproxy server: {message}") 
@@ -19,9 +17,16 @@ namespace Toxiproxy.Client
         { }
     }
 
-    public class ProxyNotFoundException : ToxiproxyException
+    public sealed class ProxyNotFoundException : ToxiproxyException
     {
         public ProxyNotFoundException(string proxyName)
             : base($"Proxy '{proxyName}' not found") { }
+    }
+
+    public sealed class ProxyConfigurationException : ToxiproxyException
+    {
+        public ProxyConfigurationException(string propertyName)
+            : base($"Invalid proxy configuration: Parameter '{propertyName}' has an invalid value")
+        { }
     }
 }
