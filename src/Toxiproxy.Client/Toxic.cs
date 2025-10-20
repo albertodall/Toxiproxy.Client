@@ -13,13 +13,29 @@ namespace Toxiproxy.Client
             _configuration = configuration;
         }
 
-        public string Name => _configuration.Name;
+        public string Name 
+        { 
+            get => _configuration.Name;
+            set => _configuration.Name = value;
+        }
+
         public string Type => _configuration.Type;
-        public string Stream => _configuration.Stream;
-        public float Toxicity => _configuration.Toxicity;
+
+        public ToxicDirection Stream
+        {
+            get => Enum.Parse<ToxicDirection>(_configuration.Stream);
+            set => _configuration.Stream = Enum.GetName(typeof(ToxicDirection), value);
+        }
+
+        public float Toxicity
+        {
+            get => _configuration.Toxicity;
+            set => _configuration.Toxicity = value;
+        }
+
         protected Dictionary<string, object> Attributes => _configuration.Attributes;
 
-        public T GetAttribute<T>(string key)
+        protected T GetAttribute<T>(string key)
         {
             if (Attributes.TryGetValue(key, out var value))
             {
