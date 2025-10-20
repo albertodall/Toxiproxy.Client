@@ -50,7 +50,7 @@ namespace Toxiproxy.Client
         }
     }
 
-    public sealed class ToxicConfiguration
+    public sealed record ToxicConfiguration
     {
         [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;

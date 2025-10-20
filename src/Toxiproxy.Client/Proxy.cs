@@ -18,6 +18,7 @@ namespace Toxiproxy.Client
         { 
             _client = client;
             _configuration = config;
+            Toxics = config.Toxics.Select(ToxicFactory.CreateToxic).ToArray();
         }
 
         // Core Proxy Properties
@@ -25,6 +26,7 @@ namespace Toxiproxy.Client
         public string Listen => _configuration.Listen;
         public string Upstream => _configuration.Upstream;
         public bool Enabled => _configuration.Enabled;
+        public Toxic[] Toxics { get; private set; }
 
         internal ProxyConfiguration Configuration => _configuration;
 
@@ -145,8 +147,7 @@ namespace Toxiproxy.Client
         public async Task RemoveAllToxicsAsync(CancellationToken cancellationToken = default)
         {
             var toxics = await GetToxicsAsync(cancellationToken);
-            var removeToxicsTasks = toxics.Select(toxic => RemoveToxicAsync(toxic.Name));
-            await Task.WhenAll(removeToxicsTasks);
+            await Task.WhenAll(toxics.Select(toxic => RemoveToxicAsync(toxic.Name)));
         }
 
         public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, float toxicity, int latency, int jitter, CancellationToken cancellationToken = default)
