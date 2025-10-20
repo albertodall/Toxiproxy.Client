@@ -150,22 +150,11 @@ namespace Toxiproxy.Client
             await Task.WhenAll(toxics.Select(toxic => RemoveToxicAsync(toxic.Name)));
         }
 
-        public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, float toxicity, int latency, int jitter, CancellationToken cancellationToken = default)
+        public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
         {
-            var toxicData = new ToxicConfiguration
-            {
-                Name = name,
-                Type = "latency",
-                Stream = direction.ToString().ToLowerInvariant(),
-                Toxicity = toxicity,
-                Attributes = new Dictionary<string, object>
-                {
-                    {"latency", latency},
-                    {"jitter", jitter}
-                }
-            };
-
-            return (LatencyToxic)await CreateToxicAsync(toxicData, cancellationToken);
+            var toxicConfiguration = new LatencyToxic(new ToxicConfiguration());
+            builder(toxicConfiguration);
+            return (LatencyToxic)await CreateToxicAsync(toxicConfiguration.Configuration, cancellationToken);
         }
 
         private async Task<Toxic> CreateToxicAsync(ToxicConfiguration config, CancellationToken cancellationToken = default)
