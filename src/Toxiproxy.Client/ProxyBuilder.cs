@@ -16,6 +16,9 @@ namespace Toxiproxy.Client
         [JsonPropertyName("enabled")]
         public bool Enabled { get; set; } = true; // Proxies are enabled by default
 
+        [JsonPropertyName("toxics")]
+        public ToxicConfiguration[] Toxics { get; set; } = Array.Empty<ToxicConfiguration>();
+
         public void EnsureConfigurationIsValid()
         {
             if (string.IsNullOrWhiteSpace(Name))
