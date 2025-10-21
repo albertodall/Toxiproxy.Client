@@ -151,11 +151,17 @@ namespace Toxiproxy.Client
             await Task.WhenAll(toxics.Select(toxic => RemoveToxicAsync(toxic.Name)));
         }
 
-        public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
         {
-            var toxicConfiguration = new LatencyToxic(new ToxicConfiguration());
-            builder(toxicConfiguration);
-            return (LatencyToxic)await CreateToxicAsync(toxicConfiguration.Configuration, cancellationToken);
+            var toxic = new LatencyToxic(new ToxicConfiguration()
+            {
+                Name = name,
+                Stream = Enum.GetName(typeof(ToxicDirection), direction)
+            });
+
+            builder(toxic);
+            toxic.EnsureConfigurationIsValid();
+            return (LatencyToxic)await CreateToxicAsync(toxic.Configuration, cancellationToken);
         }
 
         private async Task<Toxic> CreateToxicAsync(ToxicConfiguration config, CancellationToken cancellationToken = default)
@@ -214,17 +220,17 @@ namespace Toxiproxy.Client
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                throw new ProxyConfigurationException(nameof(Name));
+                throw new ProxyConfigurationException(nameof(Name), $"Proxy must have a name.");
             }
 
             if (string.IsNullOrWhiteSpace(Listen))
             {
-                throw new ProxyConfigurationException(nameof(Listen));
+                throw new ProxyConfigurationException(nameof(Listen), "You must set a listening address as [ip address]:[port].");
             }
 
             if (string.IsNullOrWhiteSpace(Upstream))
             {
-                throw new ProxyConfigurationException(nameof(Upstream));
+                throw new ProxyConfigurationException(nameof(Upstream), "You must set an upstream address to proxy for as [ip address]:[port].");
             }
         }
     }
