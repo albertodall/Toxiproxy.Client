@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
@@ -26,7 +27,7 @@ namespace Toxiproxy.Client
         public string Listen => _configuration.Listen;
         public string Upstream => _configuration.Upstream;
         public bool Enabled => _configuration.Enabled;
-        public Toxic[] Toxics { get; private set; }
+        public IReadOnlyCollection<Toxic> Toxics { get; private set; }
 
         internal ProxyConfiguration Configuration => _configuration;
 
@@ -70,7 +71,7 @@ namespace Toxiproxy.Client
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
-                if (ServerSupportsHttpPatchForProxyUpdates)
+                if (ServerRequiresHttpPatchForProxyUpdates)
                 {
                     response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}", content, cancellationToken);
                 }
@@ -121,7 +122,7 @@ namespace Toxiproxy.Client
                 var content = new StringContent(toxicConfig, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
-                if (ServerSupportsHttpPatchForProxyUpdates)
+                if (ServerRequiresHttpPatchForProxyUpdates)
                 {
                     response = await ToxiproxyClient.HttpClient.PatchAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{toxic.Name}", content, cancellationToken);
                 }
@@ -183,12 +184,47 @@ namespace Toxiproxy.Client
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
         /// <returns>Returns <see cref="true"/> if server version is 2.6.0 or above.</returns>
-        private bool ServerSupportsHttpPatchForProxyUpdates 
+        private bool ServerRequiresHttpPatchForProxyUpdates 
         { 
             get
             {
-                Version supportsPatchMethodForUpdates = new("2.6.0");
-                return !(new Version(_client.ServerVersion).CompareTo(supportsPatchMethodForUpdates) < 0);
+                return !(new Version(_client.ServerVersion).CompareTo(new Version("2.6.0")) < 0);
+            }
+        }
+    }
+
+    public sealed record ProxyConfiguration
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("listen")]
+        public string Listen { get; set; } = string.Empty;
+
+        [JsonPropertyName("upstream")]
+        public string Upstream { get; set; } = string.Empty;
+
+        [JsonPropertyName("enabled")]
+        public bool Enabled { get; set; } = true; // Proxies are enabled by default
+
+        [JsonPropertyName("toxics")]
+        public ToxicConfiguration[] Toxics { get; set; } = Array.Empty<ToxicConfiguration>();
+
+        public void EnsureConfigurationIsValid()
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                throw new ProxyConfigurationException(nameof(Name));
+            }
+
+            if (string.IsNullOrWhiteSpace(Listen))
+            {
+                throw new ProxyConfigurationException(nameof(Listen));
+            }
+
+            if (string.IsNullOrWhiteSpace(Upstream))
+            {
+                throw new ProxyConfigurationException(nameof(Upstream));
             }
         }
     }
