@@ -25,8 +25,15 @@
 
     public sealed class ProxyConfigurationException : ToxiproxyException
     {
-        public ProxyConfigurationException(string propertyName)
-            : base($"Invalid proxy configuration: Parameter '{propertyName}' has an invalid value")
+        public ProxyConfigurationException(string propertyName, string message)
+            : base($"Invalid proxy configuration: Parameter '{propertyName}' has an invalid value. {message}")
+        { }
+    }
+
+    public sealed class ToxicConfigurationException : ToxiproxyException
+    {
+        public ToxicConfigurationException(string propertyName, string message)
+            : base($"Invalid toxic configuration: Parameter '{propertyName}' has an invalid value. {message}")
         { }
     }
 }
