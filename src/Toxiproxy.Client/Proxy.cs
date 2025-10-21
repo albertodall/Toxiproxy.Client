@@ -29,14 +29,6 @@ namespace Toxiproxy.Client
         public bool Enabled => _configuration.Enabled;
         public IReadOnlyCollection<Toxic> Toxics { get; private set; }
 
-        internal ProxyConfiguration Configuration => _configuration;
-
-        public async Task SetNameAsync(string name, CancellationToken cancellationToken = default)
-        {
-            _configuration.Name = name;
-            await UpdateAsync(cancellationToken);
-        }
-
         public async Task SetUpstreamAsync(string upstream, CancellationToken cancellationToken = default)
         {
             _configuration.Upstream = upstream;
@@ -143,12 +135,6 @@ namespace Toxiproxy.Client
         {
             var response = await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
             response.EnsureSuccessStatusCode();
-        }
-
-        public async Task RemoveAllToxicsAsync(CancellationToken cancellationToken = default)
-        {
-            var toxics = await GetToxicsAsync(cancellationToken);
-            await Task.WhenAll(toxics.Select(toxic => RemoveToxicAsync(toxic.Name)));
         }
 
         public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
