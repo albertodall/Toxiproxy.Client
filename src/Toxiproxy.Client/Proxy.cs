@@ -29,34 +29,20 @@ namespace Toxiproxy.Client
         public bool Enabled => _configuration.Enabled;
         public IReadOnlyCollection<Toxic> Toxics { get; private set; }
 
-        public async Task SetUpstreamAsync(string upstream, CancellationToken cancellationToken = default)
-        {
-            _configuration.Upstream = upstream;
-            await UpdateAsync(cancellationToken);
-        }
-
-        public async Task SetListeningAddressAsync(string listeningAddress, CancellationToken cancellationToken = default)
-        {
-            _configuration.Listen = listeningAddress;
-            await UpdateAsync(cancellationToken);
-        }
-
         public async Task EnableAsync(CancellationToken cancellationToken = default)
         {
             _configuration.Enabled = true;
-            await UpdateAsync(cancellationToken);
+            await UpdateProxyAsync(cancellationToken);
         }
 
         public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
             _configuration.Enabled = false;
-            await UpdateAsync(cancellationToken);
+            await UpdateProxyAsync(cancellationToken);
         }
 
-        public async Task UpdateAsync(CancellationToken cancellationToken = default)
+        private async Task UpdateProxyAsync(CancellationToken cancellationToken = default)
         {
-            _configuration.EnsureConfigurationIsValid();
-
             try
             {
                 var json = JsonSerializer.Serialize(_configuration, JsonOptions.Default);
@@ -201,24 +187,6 @@ namespace Toxiproxy.Client
 
         [JsonPropertyName("toxics")]
         public ToxicConfiguration[] Toxics { get; set; } = Array.Empty<ToxicConfiguration>();
-
-        public void EnsureConfigurationIsValid()
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-            {
-                throw new ProxyConfigurationException(nameof(Name), $"Proxy must have a name.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Listen))
-            {
-                throw new ProxyConfigurationException(nameof(Listen), "You must set a listening address as [ip address]:[port].");
-            }
-
-            if (string.IsNullOrWhiteSpace(Upstream))
-            {
-                throw new ProxyConfigurationException(nameof(Upstream), "You must set an upstream address to proxy for as [ip address]:[port].");
-            }
-        }
     }
 }
 
