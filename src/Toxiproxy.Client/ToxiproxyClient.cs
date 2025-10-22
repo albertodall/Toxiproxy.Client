@@ -1,12 +1,14 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Toxiproxy.Client
 {
     public sealed class ToxiproxyClient
     {
+        private const string MinimumSupportedVersion = "2.0.0";
+
         private ToxiproxyClient(string baseUrl, string serverVersion)
         {
             BaseUrl = baseUrl;
@@ -24,11 +26,14 @@ namespace Toxiproxy.Client
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                var serverVersion = JsonSerializer.Deserialize<ServerVersion>(json, JsonOptions.Default);
+                var serverVersion = JsonSerializer.Deserialize<Version>(json, JsonOptions.Default);
 
-                version = serverVersion is null
-                    ? throw new JsonException("Failed to deserialize server version data.")
-                    : serverVersion.Version;
+                version = (serverVersion, Version.Parse(MinimumSupportedVersion)) switch
+                {
+                    (null, _) => throw new JsonException("Failed to deserialize server version data."),
+                    (Version current, Version supported) when current < supported => throw new ToxiproxyConnectionException($"Toxiproxy server version is not supported. Minimum supported version is {MinimumSupportedVersion}."),
+                    (Version current, _) => current.ToString()
+                };
             }
             catch (HttpRequestException ex)
             {
@@ -53,13 +58,12 @@ namespace Toxiproxy.Client
         {
             var config = new ProxyConfiguration();
             builder(config);
+            EnsureProxyConfigurationIsValid(config);
             return AddProxyAsync(config, cancellationToken);
         }
 
         private async Task<Proxy> AddProxyAsync(ProxyConfiguration configuration, CancellationToken cancellationToken = default)
         {
-            configuration.EnsureConfigurationIsValid();
-
             try
             {
                 var json = JsonSerializer.Serialize(configuration, JsonOptions.Default);
@@ -174,11 +178,25 @@ namespace Toxiproxy.Client
                 throw new ToxiproxyConnectionException($"Failed to reset Toxiproxy server at {BaseUrl}", ex);
             }
         }
-    }
 
-    internal sealed record ServerVersion
-    {
-        [JsonPropertyName("version")]
-        public string Version { get; set; } = string.Empty;
+        private static void EnsureProxyConfigurationIsValid(ProxyConfiguration configuration)
+        {
+            Regex ipHostnamePortRegex = new("^(?:(?:\\d{1,3}\\.){3}\\d{1,3}|[a-zA-Z0-9.-]+):\\d{1,5}$");
+
+            if (string.IsNullOrWhiteSpace(configuration.Name))
+            {
+                throw new ProxyConfigurationException(nameof(configuration.Name), "Proxy must have a name.");
+            }
+
+            if (string.IsNullOrWhiteSpace(configuration.Listen) || !ipHostnamePortRegex.IsMatch(configuration.Listen))
+            {
+                throw new ProxyConfigurationException(nameof(configuration.Listen), "You must set a listening address in the form [ip address]:[port].");
+            }
+
+            if (string.IsNullOrWhiteSpace(configuration.Upstream) || !ipHostnamePortRegex.IsMatch(configuration.Listen))
+            {
+                throw new ProxyConfigurationException(nameof(configuration.Upstream), "You must set an upstream address to proxy for, in the form [ip address/hostname]:[port].");
+            }
+        }
     }
 }

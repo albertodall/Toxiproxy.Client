@@ -80,7 +80,7 @@ namespace Toxiproxy.Client
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                throw new ToxicConfigurationException(nameof(Name), "You must prvide a name for the toxic.");
+                throw new ToxicConfigurationException(nameof(Name), "You must provide a name for the toxic.");
             }
 
             if (string.IsNullOrWhiteSpace(Type))
