@@ -68,10 +68,14 @@ namespace Toxiproxy.Client
 
         public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
         {
-            var toxic = (await GetToxicsAsync(cancellationToken)).FirstOrDefault(t => t.Name == name);
-            if (toxic is not null)
+            var response = await ToxiproxyClient.HttpClient.GetAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var toxicData = JsonSerializer.Deserialize<ToxicConfiguration>(json, JsonOptions.Default);
+            if (toxicData is not null)
             {
-                return ToxicFactory.CreateToxic<T>(toxic.Configuration);
+                return ToxicFactory.CreateToxic<T>(toxicData);
             }
 
             return null;
