@@ -22,7 +22,7 @@ namespace Toxiproxy.Client
     /// This is useful for checking for the compatibility between the client API and the Toxiproxy server.
     /// </summary>
     /// <remarks>
-    /// The version endpoint returns a JSON object in the format: { "version": "x.y.z" }.
+    /// The /version endpoint returns a JSON object in the format: { "version": "x.y.z" }.
     /// </remarks>
     internal sealed class VersionConverter : JsonConverter<Version>
     {
