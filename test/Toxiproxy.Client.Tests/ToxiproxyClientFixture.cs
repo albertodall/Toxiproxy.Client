@@ -96,7 +96,7 @@ namespace Toxiproxy.Client.Tests
             }, TestContext.Current.CancellationToken);
 
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
-            Assert.Equal(2, proxies.Length);
+            Assert.Equal(2, proxies.Count);
         }
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
