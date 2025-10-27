@@ -207,7 +207,7 @@ namespace Toxiproxy.Client
 
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    throw new ToxiproxyException($"Proxy with name '{configuration.Name}' already exists");
+                    throw new ProxyConfigurationException(nameof(configuration.Name), $"Proxy with name '{configuration.Name}' already exists");
                 }
 
                 response.EnsureSuccessStatusCode();
@@ -238,15 +238,51 @@ namespace Toxiproxy.Client
                 throw new ProxyConfigurationException(nameof(configuration.Name), "Configured proxy must have a name.");
             }
 
-            if (string.IsNullOrWhiteSpace(configuration.Listen) || !ipHostnamePortRegex.IsMatch(configuration.Listen))
+            if (string.IsNullOrWhiteSpace(configuration.Listen) || !IsListeningAddressValid(configuration.Listen))
             {
                 throw new ProxyConfigurationException(nameof(configuration.Listen), "You must set a listening address in the form <ip address>:<port>.");
             }
 
-            if (string.IsNullOrWhiteSpace(configuration.Upstream) || !ipHostnamePortRegex.IsMatch(configuration.Listen))
+            if (string.IsNullOrWhiteSpace(configuration.Upstream) || !IsListeningAddressValid(configuration.Upstream))
             {
                 throw new ProxyConfigurationException(nameof(configuration.Upstream), "You must set an upstream address to proxy for, in the form <ip address/hostname>:<port>.");
             }
+        }
+
+        private static bool IsListeningAddressValid(string address)
+        {
+            Regex listeningAddressRegex = new(@"^(?<host>[^:]+):(?<port>\d+)$", RegexOptions.Compiled);
+            Regex looksLikeAnIPAddressRegex = new (@"^[\d.]+$", RegexOptions.Compiled);
+
+            var match = listeningAddressRegex.Match(address);
+            if (match.Success)
+            {
+                string host = match.Groups["host"].Value;
+                string portStr = match.Groups["port"].Value;
+
+                // Validate port range
+                if (!int.TryParse(portStr, out int port) || port < 1 || port > 65535)
+                {
+                    return false;
+                }
+
+                // Validate IP address
+                if (looksLikeAnIPAddressRegex.IsMatch(host))
+                {
+                    if (!IPAddress.TryParse(host, out IPAddress addr))
+                    { 
+                        return false;
+                    }
+
+                    // Reject things like "20.2" or "10.11.12"
+                    return addr.ToString() == host;
+                }
+
+                // Parse hostname
+                return Uri.CheckHostName(host) != UriHostNameType.Unknown;
+            }
+
+            return false;
         }
     }
 }
