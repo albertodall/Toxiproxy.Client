@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 namespace Toxiproxy.Client.Tests
 {
     public sealed class ToxiproxyClientFixture : IClassFixture<ToxiproxyFixture>, IAsyncLifetime
@@ -37,7 +39,7 @@ namespace Toxiproxy.Client.Tests
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            await Assert.ThrowsAsync<ToxiproxyException>(async () =>
+            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
                 Proxy proxy2 = await _sut.ConfigureProxy(cfg =>
                 {
@@ -46,6 +48,8 @@ namespace Toxiproxy.Client.Tests
                     cfg.Upstream = "example.org:82";
                 }, TestContext.Current.CancellationToken);
             });
+
+            Assert.Contains($"Proxy with name '{testProxyName}' already exists", ex.Message, StringComparison.CurrentCulture);
         }
 
         [Fact]
@@ -97,6 +101,69 @@ namespace Toxiproxy.Client.Tests
 
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
             Assert.Equal(2, proxies.Count);
+        }
+
+        [Fact]
+        public async Task Client_Should_ThrowException_WhenProxyNameIsNotValid()
+        {
+            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
+            {
+                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                {
+                    cfg.Listen = "127.0.0.1:1234";
+                    cfg.Upstream = "myserver.com:443";
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Contains("Configured proxy must have a name", ex.Message, StringComparison.CurrentCulture);
+        }
+
+        [Theory]
+        [InlineData("invalid_address")]
+        [InlineData("10.10:8080")]
+        [InlineData("10.11.12:80")]
+        [InlineData("127.0.0.180")]
+        [InlineData("127.0.0.1")]
+        [InlineData(":8080")]
+        [InlineData("256.0.0.1:80")]
+        [InlineData("256.256.256.256:80")]
+        public async Task Client_Should_ThrowException_WhenListeningAddressIsInvalid(string listeningAddress)
+        {
+            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
+            {
+                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                {
+                    cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                    cfg.Listen = listeningAddress;
+                    cfg.Upstream = "example.org:80";
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Contains("You must set a listening address in the form <ip address>:<port>", ex.Message, StringComparison.CurrentCulture);
+        }
+
+        [Theory]
+        [InlineData("invalid_address")]
+        [InlineData("10.10:8080")]
+        [InlineData("10.11.12:80")]
+        [InlineData("127.0.0.180")]
+        [InlineData("127.0.0.1")]
+        [InlineData(":8080")]
+        [InlineData("256.0.0.1:80")]
+        [InlineData("256.256.256.256:80")]
+        public async Task Client_Should_ThrowException_WhenUpstreamAddressIsInvalid(string upstreamAddress)
+        {
+            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
+            {
+                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                {
+                    cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                    cfg.Listen = "127.0.0.1:1234";
+                    cfg.Upstream = upstreamAddress;
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Contains("You must set an upstream address to proxy for, in the form <ip address/hostname>:<port>", ex.Message, StringComparison.CurrentCulture);
         }
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
