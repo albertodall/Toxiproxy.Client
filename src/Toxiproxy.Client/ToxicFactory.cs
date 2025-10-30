@@ -1,6 +1,6 @@
 ﻿namespace Toxiproxy.Client
 {
-    public static class ToxicType
+    internal static class ToxicType
     {
         public const string Latency = "latency";
         public const string Bandwidth = "bandwidth";
@@ -17,7 +17,7 @@
         {
             return configuration.Type.ToLowerInvariant() switch
             {
-                "latency" => new LatencyToxic(configuration),
+                ToxicType.Latency  => new LatencyToxic(configuration),
                 //"bandwidth" => new BandwidthToxic(data),
                 //"timeout" => new TimeoutToxic(data),
                 //"slow_close" => new SlowCloseToxic(data),
