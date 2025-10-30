@@ -8,9 +8,20 @@ namespace Toxiproxy.Client
     {
         private readonly ToxicConfiguration _configuration;
 
-        protected Toxic(ToxicConfiguration configuration)
+        protected Toxic(string toxicType, ToxicConfiguration configuration)
         {
+            if (string.IsNullOrEmpty(configuration.Name))
+            {
+                throw new ToxicConfigurationException(nameof(configuration.Name), "You must provide a name for the toxic.");
+            }
+
+            if (configuration.Toxicity < 0.0f || configuration.Toxicity > 1.0f)
+            {
+                throw new ToxicConfigurationException(nameof(configuration.Toxicity), "Toxicity must be a value between 0.0 and 1.0.");
+            }
+
             _configuration = configuration;
+            _configuration.Type = toxicType;
         }
 
         /// <summary>
@@ -41,7 +52,15 @@ namespace Toxiproxy.Client
         public float Toxicity
         {
             get => _configuration.Toxicity;
-            set => _configuration.Toxicity = value;
+            set
+            {
+                if (value < 0.0f || value > 1.0f)
+                {
+                    throw new ToxicConfigurationException(nameof(Toxicity), "Toxicity must be a value between 0.0 and 1.0.");
+                }
+
+                _configuration.Toxicity = value;
+            } 
         }
 
         protected Dictionary<string, object> Attributes => _configuration.Attributes;
@@ -75,24 +94,6 @@ namespace Toxiproxy.Client
         }
 
         internal ToxicConfiguration Configuration => _configuration;
-
-        public virtual void EnsureConfigurationIsValid()
-        {
-            if (string.IsNullOrWhiteSpace(Name))
-            {
-                throw new ToxicConfigurationException(nameof(Name), "You must provide a name for the toxic.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Type))
-            {
-                throw new ToxicConfigurationException(nameof(Type), "You must specify the type of toxic you are going to set up.");
-            }
-
-            if (Toxicity < 0.0f || Toxicity > 1.0f)
-            {
-                throw new ToxicConfigurationException(nameof(Toxicity), "Toxicity value must be between 0.0 and 1.0.");
-            }
-        }
 
         public override string ToString()
         {
