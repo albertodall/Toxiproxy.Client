@@ -47,7 +47,7 @@ namespace Toxiproxy.Client
         /// <remarks>
         /// The stream direction cannot be changed after creation.
         /// </remarks>
-        public ToxicDirection Stream => Enum.Parse<ToxicDirection>(_configuration.Stream);
+        public ToxicDirection Stream => _configuration.Stream;
 
         public float Toxicity
         {

@@ -2,7 +2,7 @@
 {
     public sealed class LatencyToxicFixture : IClassFixture<ToxiproxyFixture>, IAsyncLifetime
     {
-        private ToxiproxyClient _client;
+        private readonly ToxiproxyClient _client;
 
         public LatencyToxicFixture(ToxiproxyFixture fixture)
         {
