@@ -4,12 +4,6 @@ using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
-    public enum ToxicDirection
-    {
-        Upstream,
-        Downstream
-    }
-
     public sealed class Proxy
     {
         private readonly ToxiproxyClient _client;
@@ -99,7 +93,7 @@ namespace Toxiproxy.Client
             var toxic = new LatencyToxic(new ToxicConfiguration()
             {
                 Name = name,
-                Stream = Enum.GetName(typeof(ToxicDirection), direction).ToLowerInvariant()
+                Stream = direction,
             });
 
             builder(toxic);
