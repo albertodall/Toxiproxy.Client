@@ -1,5 +1,16 @@
 ﻿namespace Toxiproxy.Client
 {
+    public static class ToxicType
+    {
+        public const string Latency = "latency";
+        public const string Bandwidth = "bandwidth";
+        public const string Timeout = "timeout";
+        public const string SlowClose = "slow_close";
+        public const string Slicer = "slicer";
+        public const string LimitData = "limit_data";
+        public const string ResetPeer = "reset_peer";
+    }
+
     internal static class ToxicFactory
     {
         public static Toxic CreateToxic(ToxicConfiguration configuration)
