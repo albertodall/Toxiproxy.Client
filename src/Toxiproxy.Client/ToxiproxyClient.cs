@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -167,7 +168,7 @@ namespace Toxiproxy.Client
                 var response = await HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new ProxyNotFoundException(name);
+                    throw new ProxyNotFoundException($"Proxy '{name}' not found");
                 }
 
                 response.EnsureSuccessStatusCode();
@@ -231,8 +232,6 @@ namespace Toxiproxy.Client
 
         private static void EnsureProxyConfigurationIsValid(ProxyConfiguration configuration)
         {
-            Regex ipHostnamePortRegex = new("^(?:(?:\\d{1,3}\\.){3}\\d{1,3}|[a-zA-Z0-9.-]+):\\d{1,5}$");
-
             if (string.IsNullOrWhiteSpace(configuration.Name))
             {
                 throw new ProxyConfigurationException(nameof(configuration.Name), "Configured proxy must have a name.");

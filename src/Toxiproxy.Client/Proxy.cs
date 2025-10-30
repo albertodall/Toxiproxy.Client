@@ -99,11 +99,10 @@ namespace Toxiproxy.Client
             var toxic = new LatencyToxic(new ToxicConfiguration()
             {
                 Name = name,
-                Stream = Enum.GetName(typeof(ToxicDirection), direction)
+                Stream = Enum.GetName(typeof(ToxicDirection), direction).ToLowerInvariant()
             });
 
             builder(toxic);
-            toxic.EnsureConfigurationIsValid();
             return (LatencyToxic)await CreateToxicAsync(toxic.Configuration, cancellationToken);
         }
 

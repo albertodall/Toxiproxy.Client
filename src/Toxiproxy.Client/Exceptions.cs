@@ -25,8 +25,8 @@
 
     public sealed class ProxyNotFoundException : ToxiproxyException
     {
-        public ProxyNotFoundException(string proxyName)
-            : base($"Proxy '{proxyName}' not found") 
+        public ProxyNotFoundException(string message)
+            : base(message) 
         { }
     }
 
@@ -37,7 +37,11 @@
     {
         public ProxyConfigurationException(string propertyName, string message)
             : base($"Invalid proxy configuration: Parameter '{propertyName}' has an invalid value. {message}")
-        { }
+        { 
+            PropertyName = propertyName;
+        }
+
+        public string PropertyName { get; }
     }
 
     /// <summary>
@@ -47,6 +51,10 @@
     {
         public ToxicConfigurationException(string propertyName, string message)
             : base($"Invalid toxic configuration: Parameter '{propertyName}' has an invalid value. {message}")
-        { }
-    }
+        { 
+            PropertyName = propertyName;
+        }
+
+        public string PropertyName { get; }
+     }
 }

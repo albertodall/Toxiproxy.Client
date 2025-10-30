@@ -109,6 +109,55 @@
             Assert.Equal(0.1f, updatedLatencyToxic.Toxicity);
         }
 
+        [Fact]
+        public async Task Should_Throw_WhenSettingInvalidLatency_ForLatencyToxic()
+        {
+            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            var ex = await Assert.ThrowsAsync<ToxicConfigurationException>(async () =>
+            {
+                LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+                {
+                    cfg.Toxicity = 1.0f;
+                    cfg.Latency = -42;
+                    cfg.Jitter = 10;
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Equal("Latency", ex.PropertyName);
+            Assert.Contains("Latency must be a non-negative value", ex.Message, StringComparison.InvariantCulture);
+        }
+
+        [Fact]
+        public async Task Should_Throw_WhenSettingInvalidJitter_ForLatencyToxic()
+        {
+            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            var ex = await Assert.ThrowsAsync<ToxicConfigurationException>(async () =>
+            {
+                LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+                {
+                    cfg.Toxicity = 1.0f;
+                    cfg.Latency = 100;
+                    cfg.Jitter = -10;
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Equal("Jitter", ex.PropertyName);
+            Assert.Contains("Jitter must be a non-negative value", ex.Message, StringComparison.InvariantCulture);
+        }
+
+
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
         public async ValueTask DisposeAsync()
