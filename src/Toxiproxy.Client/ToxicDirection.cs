@@ -15,10 +15,10 @@
         public static ToxicDirection Upstream => new("upstream");
         public static ToxicDirection Downstream => new("downstream");
 
-        public override string ToString() => _direction;
-
-        public static implicit operator ToxicDirection(string direction) => direction;
+        public static implicit operator ToxicDirection(string direction) => new(direction);
         public static implicit operator string(ToxicDirection direction) => direction.ToString();
+
+        public override string ToString() => _direction;
     }
 }
 

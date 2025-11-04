@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
+    /// <summary>
+    /// Represents a proxy entry on the Toxiproxy server.
+    /// </summary>
     public sealed class Proxy
     {
         private readonly ToxiproxyClient _client;
@@ -16,25 +19,57 @@ namespace Toxiproxy.Client
             Toxics = config.Toxics.Select(ToxicFactory.CreateToxic).ToArray();
         }
 
-        // Core Proxy Properties
+        /// <summary>
+        /// Name of the <see cref="Proxy"/>."/>
+        /// </summary>
         public string Name => _configuration.Name;
+
+        /// <summary>
+        /// Listening address and port of the <see cref="Proxy"/>, in [address]:[port] format.
+        /// </summary>
         public string Listen => _configuration.Listen;
+
+        /// <summary>
+        /// Address or hostname of the upstream service of the <see cref="Proxy"/>."/>
+        /// </summary>
         public string Upstream => _configuration.Upstream;
+
+        /// <summary>
+        /// Whether the <see cref="Proxy"/> is enabled or disabled.
+        /// </summary>
         public bool Enabled => _configuration.Enabled;
+
+        /// <summary>
+        /// List of <see cref="Toxic"/>s configured on the <see cref="Proxy"/>."/>
+        /// </summary>
         public IReadOnlyCollection<Toxic> Toxics { get; private set; }
 
+        /// <summary>
+        /// Sets a proxy as enabled.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
         public async Task EnableAsync(CancellationToken cancellationToken = default)
         {
             _configuration.Enabled = true;
             await UpdateProxyAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Sets a proxy as disabled.
+        /// </summary>
         public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
             _configuration.Enabled = false;
             await UpdateProxyAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Reads current configuration of a <see cref="Toxic"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of the <see cref="Toxic"> we're interested in.</typeparam>
+        /// <param name="name">Name of the <see cref="Toxic"/> we're interested in.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The instance of the <see cref="Toxic"/> configured on the server, or <see langword="null"> if the toxic with the specified name does not exist.</returns>
         public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
         {
             var response = await ToxiproxyClient.HttpClient.GetAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
@@ -50,6 +85,12 @@ namespace Toxiproxy.Client
             return null;
         }
 
+        /// <summary>
+        /// Update the configuration of a <see cref="Toxic"/>.
+        /// </summary>
+        /// <param name="toxic"><see cref="Toxic"/> to update.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="ToxiproxyConnectionException"></exception>
         public async Task UpdateToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
         {
             try
@@ -75,6 +116,12 @@ namespace Toxiproxy.Client
             }
         }
 
+        /// <summary>
+        /// Removes a <see cref="Toxic"/> from the <see cref="Proxy"/>.
+        /// </summary>
+        /// <param name="name">Name of the <see cref="Toxic"/> we want to remove.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="ToxiproxyConnectionException"></exception>
         public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
         {
             try
@@ -88,6 +135,14 @@ namespace Toxiproxy.Client
             }
         }
 
+        /// <summary>
+        /// Add a <see cref="LatencyToxic"/> to the <see cref="Proxy"/>.
+        /// </summary>
+        /// <param name="name">Name of the <see cref="Toxic"> to create.</param>
+        /// <param name="direction">Working direction of the <see cref="Toxic"/> (upstream or downstream).</param>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="LatencyToxic"/>.</returns>
         public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
         {
             var toxic = new LatencyToxic(new ToxicConfiguration()
@@ -146,12 +201,15 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Starting from version 2.6.0, Toxiproxy server supports HTTP PATCH method for proxy updates, 
         /// and started deprecating updates using HTTP POST. 
-        /// Official deprecation will start with version 3.0.0.
+        /// HTTP POST for updates won't be allowed anymore starting from version 3.0.0.
         /// This property allows choose the supported update HTTP method according to the detected version, 
         /// and we can support both ways without breaking.
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
         /// <returns>Returns <see cref="true"/> if server version is 2.6.0 or above.</returns>
+        /// <remarks>
+        /// The version check is needed, because if you use HTTP PATCH method on servers below 2.6.0, you get a "405 Method Not Allowed" response.
+        /// </remarks>
         private bool ServerRequiresHttpPatchForProxyUpdates => !(new Version(_client.ServerVersion).CompareTo(new Version("2.6.0")) < 0);
     }
 
@@ -173,7 +231,7 @@ namespace Toxiproxy.Client
         public string Listen { get; set; } = string.Empty;
 
         /// <summary>
-        /// Address or hostname of the service we are proxying to.
+        /// Address or hostname of the service we are proxying.
         /// </summary>
         [JsonPropertyName("upstream")]
         public string Upstream { get; set; } = string.Empty;
@@ -191,7 +249,7 @@ namespace Toxiproxy.Client
         /// List of toxics configured on the proxy.
         /// </summary>
         [JsonPropertyName("toxics")]
-        public ToxicConfiguration[] Toxics { get; set; } = Array.Empty<ToxicConfiguration>();
+        public IReadOnlyCollection<ToxicConfiguration> Toxics { get; set; } = [];
     }
 }
 
