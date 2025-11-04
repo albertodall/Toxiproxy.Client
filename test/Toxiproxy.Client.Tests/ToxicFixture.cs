@@ -12,7 +12,7 @@
         [Fact]
         public async Task Proxy_ShouldRemoveToxic_WhenToxicExists()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -34,7 +34,7 @@
         [Fact]
         public async Task Proxy_ShouldNotThrowException_WhenRemovingNonExistingToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -47,7 +47,7 @@
         [Fact]
         public async Task Proxy_ShouldCreateToxic_WithDefaultValues()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";

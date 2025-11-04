@@ -12,7 +12,7 @@
         [Fact]
         public async Task Should_AddLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -37,7 +37,7 @@
         [Fact]
         public async Task Should_UpdateLatency_ForLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -62,7 +62,7 @@
         [Fact]
         public async Task Should_UpdateJitter_ForLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -87,7 +87,7 @@
         [Fact]
         public async Task Should_UpdateToxicity_ForLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -112,7 +112,7 @@
         [Fact]
         public async Task Should_ThrowException_WhenSettingInvalidLatency_ForLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -136,7 +136,7 @@
         [Fact]
         public async Task Should_ThrowException_WhenSettingInvalidJitter_ForLatencyToxic()
         {
-            Proxy proxy = await _client.ConfigureProxy(cfg =>
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";

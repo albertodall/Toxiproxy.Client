@@ -18,7 +18,7 @@ namespace Toxiproxy.Client
             Type = toxicType;
         }
 
-        protected Toxic(ToxicConfiguration configuration)
+        internal Toxic(ToxicConfiguration configuration)
             : this(configuration.Type)
         {
             Name = configuration.Name;
@@ -130,38 +130,22 @@ namespace Toxiproxy.Client
 
     /// <summary>
     /// Set of parameters used to configure a toxic.
+    /// Helper class for serialization/deserialization of toxic data.
     /// </summary>
-    public sealed record ToxicConfiguration
+    internal sealed record ToxicConfiguration
     {
-        /// <summary>
-        /// Toxic name.
-        /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Toxic type (e.g., "latency", "bandwidth", etc.)
-        /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Link direction to affect: "upstream" or "downstream".
-        /// Toxics work downstream by default.
-        /// </summary>
         [JsonPropertyName("stream")]
         public string Stream { get; set; } = ToxicDirection.Downstream;
 
-        /// <summary>
-        /// Toxicity value of the toxic.
-        /// This value represents the probability of the toxic being applied to a link (defaults to 1.0, 100%).
-        /// </summary>
         [JsonPropertyName("toxicity")]
         public float Toxicity { get; set; } = 1.0f;
 
-        /// <summary>
-        /// A map of toxic-specific attributes.
-        /// </summary>
         [JsonPropertyName("attributes")]
         public Dictionary<string, object> Attributes { get; set; } = [];
     }

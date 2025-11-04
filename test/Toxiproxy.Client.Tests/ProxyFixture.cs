@@ -10,9 +10,9 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldDisableAndEnableProxy_WhenProxyExists()
+        public async Task EnableDisableProxy_ShouldWork_WhenProxyExists()
         {
-            Proxy sut = await _client.ConfigureProxy(cfg =>
+            Proxy sut = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -29,11 +29,11 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldThrowException_WhenNameIsNotValid()
+        public async Task ConfigureProxy_ShouldThrowException_WhenNameIsEmpty()
         {
             await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy sut = await _client.ConfigureProxy(cfg =>
+                Proxy sut = await _client.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Listen = "127.0.0.1:11111";
                     cfg.Upstream = "example.org:80";
@@ -42,11 +42,11 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldThrowException_WhenListeningAddressIsNotValid()
+        public async Task ConfigureProxy_ShouldThrowException_WhenListeningAddressIsNotValid()
         {
             await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy sut = await _client.ConfigureProxy(cfg =>
+                Proxy sut = await _client.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                     cfg.Upstream = "example.org:80";
@@ -55,11 +55,11 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldThrowException_WhenUpstreamIsNotValid()
+        public async Task ConfigureProxy_ShouldThrowException_WhenUpstreamIsNotValid()
         {
             await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy sut = await _client.ConfigureProxy(cfg =>
+                Proxy sut = await _client.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                     cfg.Listen = "127.0.0.1:12345";
@@ -68,9 +68,9 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldDeleteProxy_WhenProxyExists()
+        public async Task DeleteProxy_ShouldDeleteProxy_WhenProxyExists()
         {
-            Proxy sut = await _client.ConfigureProxy(cfg =>
+            Proxy sut = await _client.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:12345";
@@ -84,9 +84,41 @@
         }
 
         [Fact]
-        public async Task Proxy_ShouldNotThrowException_WhenProxyDoesNotExists()
+        public async Task DeleteProxy_ShouldNotThrowException_WhenProxyDoesNotExists()
         {
             await _client.DeleteProxyAsync("non_existing_proxy", TestContext.Current.CancellationToken);
+        }
+
+        [Fact]
+        public async Task AddToxic_ShouldUpdateProxyToxicList()
+        {
+            Proxy sut = await _client.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:12345";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            await sut.AddLatencyToxicAsync(toxic => toxic.Latency = 1000, TestContext.Current.CancellationToken);
+
+            Assert.Single(sut.Toxics);
+        }
+
+        [Fact]
+        public async Task RemoveToxic_ShouldUpdateProxyToxicList()
+        {
+            Proxy sut = await _client.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:12345";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            var toxic = await sut.AddLatencyToxicAsync(toxic => toxic.Jitter = 20, TestContext.Current.CancellationToken);
+
+            await sut.RemoveToxicAsync(toxic.Name, TestContext.Current.CancellationToken);
+
+            Assert.Empty(sut.Toxics);
         }
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
