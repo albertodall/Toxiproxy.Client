@@ -23,6 +23,9 @@
         { }
     }
 
+    /// <summary>
+    /// You're trying to access a proxy that does not exist.
+    /// </summary>
     public sealed class ProxyNotFoundException : ToxiproxyException
     {
         public ProxyNotFoundException(string message)

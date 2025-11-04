@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
+    /// <summary>
+    /// Default json serialization options.
+    /// </summary>
     internal static class JsonOptions
     {
         public static readonly JsonSerializerOptions Default = new()
