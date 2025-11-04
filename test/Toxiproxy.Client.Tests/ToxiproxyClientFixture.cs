@@ -15,7 +15,7 @@ namespace Toxiproxy.Client.Tests
         [Fact]
         public async Task Client_ShouldCreateNewProxy()
         {
-            Proxy proxy = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -26,34 +26,9 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Fact]
-        public async Task Client_ShouldThrowException_WhenProxyAlreadyExists()
+        public async Task Client_ShouldRetrieveProxy_WhenProxyExists()
         {
-            string testProxyName = $"test_proxy_{Guid.NewGuid()}";
-
-            Proxy proxy = await _sut.ConfigureProxy(cfg =>
-            {
-                cfg.Name = testProxyName;
-                cfg.Listen = "127.0.0.1:11111";
-                cfg.Upstream = "example.org:80";
-            }, TestContext.Current.CancellationToken);
-
-            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
-            {
-                Proxy proxy2 = await _sut.ConfigureProxy(cfg =>
-                {
-                    cfg.Name = testProxyName;
-                    cfg.Listen = "127.0.0.1:11112";
-                    cfg.Upstream = "example.org:82";
-                }, TestContext.Current.CancellationToken);
-            });
-
-            Assert.Contains($"Proxy with name '{testProxyName}' already exists", ex.Message, StringComparison.CurrentCulture);
-        }
-
-        [Fact]
-        public async Task Client_Should_RetrieveProxy_WhenProxyExists()
-        {
-            Proxy proxy = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -65,9 +40,40 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Fact]
+        public async Task Client_ShouldReturnNull_WhenProxyDoesNotExist()
+        {
+            Assert.Null(await _sut.GetProxyAsync("non_existing_proxy", TestContext.Current.CancellationToken));
+        }
+
+        [Fact]
+        public async Task Client_ShouldThrowException_WhenProxyAlreadyExists()
+        {
+            string testProxyName = $"test_proxy_{Guid.NewGuid()}";
+
+            Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = testProxyName;
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
+            {
+                Proxy proxy2 = await _sut.ConfigureProxyAsync(cfg =>
+                {
+                    cfg.Name = testProxyName;
+                    cfg.Listen = "127.0.0.1:11112";
+                    cfg.Upstream = "example.org:82";
+                }, TestContext.Current.CancellationToken);
+            });
+
+            Assert.Contains($"Proxy with name '{testProxyName}' already exists", ex.Message, StringComparison.CurrentCulture);
+        }
+
+        [Fact]
         public async Task Client_ShouldDeleteProxy_WhenProxyExists()
         {
-            Proxy proxy = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
@@ -89,14 +95,14 @@ namespace Toxiproxy.Client.Tests
         [Fact]
         public async Task Client_ShouldRetrieveAllProxies_WhenServerHasProxies()
         {
-            Proxy proxy1 = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy1 = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            Proxy proxy2 = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy2 = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:22222";
@@ -108,6 +114,40 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Fact]
+        public async Task Client_ShouldRetrieveAllProxiesWithToxics_WhenServerHasProxies()
+        {
+            Proxy proxy1 = await _sut.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            await proxy1.AddLatencyToxicAsync(toxic =>
+            {
+                toxic.Latency = 100;
+                toxic.Jitter = 10;
+            }, TestContext.Current.CancellationToken);
+
+            Proxy proxy2 = await _sut.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:22222";
+                cfg.Upstream = "example.com:80";
+            }, TestContext.Current.CancellationToken);
+
+            await proxy2.AddLatencyToxicAsync(toxic =>
+            {
+                toxic.Latency = 200;
+                toxic.Jitter = 20;
+            }, TestContext.Current.CancellationToken);
+
+            var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(2, proxies.Count);
+            Assert.All(proxies, p => Assert.True(p.Toxics.Count > 0));
+        }
+
+        [Fact]
         public async Task Client_ShouldNotRetrieveProxies_WhenServerHasNoProxies()
         {
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
@@ -115,18 +155,18 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Fact]
-        public async Task Client_Should_ThrowException_WhenProxyNameIsNotValid()
+        public async Task Client_Should_ThrowException_WhenProxyNameIsNotSpecified()
         {
             var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Listen = "127.0.0.1:1234";
                     cfg.Upstream = "myserver.com:443";
                 }, TestContext.Current.CancellationToken);
             });
 
-            Assert.Contains("Configured proxy must have a name", ex.Message, StringComparison.CurrentCulture);
+            Assert.Contains("You must supply a name for this proxy", ex.Message, StringComparison.CurrentCulture);
         }
 
         [Theory]
@@ -142,7 +182,7 @@ namespace Toxiproxy.Client.Tests
         {
             var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                     cfg.Listen = listeningAddress;
@@ -150,7 +190,7 @@ namespace Toxiproxy.Client.Tests
                 }, TestContext.Current.CancellationToken);
             });
 
-            Assert.Contains("You must set a proxy listening address in the form <ip address>:<port>", ex.Message, StringComparison.CurrentCulture);
+            Assert.Contains("You must supply a valid listening address in the form [address]:[port]", ex.Message, StringComparison.CurrentCulture);
         }
 
         [Theory]
@@ -166,7 +206,7 @@ namespace Toxiproxy.Client.Tests
         {
             var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
             {
-                Proxy proxy = await _sut.ConfigureProxy(cfg =>
+                Proxy proxy = await _sut.ConfigureProxyAsync(cfg =>
                 {
                     cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                     cfg.Listen = "127.0.0.1:1234";
@@ -174,20 +214,20 @@ namespace Toxiproxy.Client.Tests
                 }, TestContext.Current.CancellationToken);
             });
 
-            Assert.Contains("You must set an upstream address to proxy for, in the form <ip address/hostname>:<port>", ex.Message, StringComparison.CurrentCulture);
+            Assert.Contains("You must supply a valid upstream address to proxy for, in the form [ip address/hostname]:[port]", ex.Message, StringComparison.CurrentCulture);
         }
 
         [Fact]
         public async Task Client_ShouldResetServer()
         {
-            Proxy proxy1 = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy1 = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:11111";
                 cfg.Upstream = "example1.org:80";
             }, TestContext.Current.CancellationToken);
 
-            Proxy proxy2 = await _sut.ConfigureProxy(cfg =>
+            Proxy proxy2 = await _sut.ConfigureProxyAsync(cfg =>
             {
                 cfg.Name = $"test_proxy_{Guid.NewGuid()}";
                 cfg.Listen = "127.0.0.1:22222";

@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Toxiproxy.Client
 {
@@ -11,39 +12,96 @@ namespace Toxiproxy.Client
     public sealed class Proxy
     {
         private readonly ToxiproxyClient _client;
-        private readonly ProxyConfiguration _configuration = new();
 
-        internal Proxy(ToxiproxyClient client, ProxyConfiguration config)
+        private string _name = string.Empty;
+        private string _listen = string.Empty;
+        private string _upstream = string.Empty;
+
+        internal Proxy(ToxiproxyClient client)
         { 
             _client = client;
-            _configuration = config;
+        }
+
+        internal Proxy(ToxiproxyClient client, ProxyConfiguration config)
+            : this(client)
+        {
+            Name = config.Name;
+            Listen = config.Listen;
+            Upstream = config.Upstream;
+            Enabled = config.Enabled;
             Toxics = config.Toxics.Select(ToxicFactory.CreateToxic).ToArray();
         }
 
         /// <summary>
         /// Name of the <see cref="Proxy"/>."/>
         /// </summary>
-        public string Name => _configuration.Name;
+        /// <remarks>
+        /// Once created, the name of the proxy cannot be changed.
+        /// </remarks>
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ProxyConfigurationException(nameof(Name), "You must supply a name for this proxy.");
+                } 
+                else if (!string.IsNullOrEmpty(Name))
+                {
+                    throw new ProxyConfigurationException(nameof(Name), "You cannot change the name of an existing proxy.");
+                }
+
+                _name = value;
+            }
+        }
 
         /// <summary>
         /// Listening address and port of the <see cref="Proxy"/>, in [address]:[port] format.
         /// </summary>
-        public string Listen => _configuration.Listen;
+        public string Listen
+        {
+            get => _listen;
+            set
+            {
+                if (string.IsNullOrEmpty(value) || !IsListeningAddressValid(value))
+                {
+                    throw new ProxyConfigurationException(nameof(Listen), "You must supply a valid listening address in the form [address]:[port].");
+                }
+
+                _listen = value;
+            }
+        }
 
         /// <summary>
         /// Address or hostname of the upstream service of the <see cref="Proxy"/>."/>
         /// </summary>
-        public string Upstream => _configuration.Upstream;
+        public string Upstream
+        {
+            get => _upstream;
+            set
+            {
+                if (string.IsNullOrEmpty(value) || !IsListeningAddressValid(value))
+                {
+                    throw new ProxyConfigurationException(nameof(Upstream), "You must supply a valid upstream address to proxy for, in the form [ip address/hostname]:[port].");
+                }
+
+                _upstream = value;
+            }
+        }
 
         /// <summary>
         /// Whether the <see cref="Proxy"/> is enabled or disabled.
         /// </summary>
-        public bool Enabled => _configuration.Enabled;
+        /// <remarks>
+        /// When created, proxies are enabled by default.
+        /// </remarks>
+        public bool Enabled { get; private set; } = true;
 
         /// <summary>
         /// List of <see cref="Toxic"/>s configured on the <see cref="Proxy"/>."/>
         /// </summary>
-        public IReadOnlyCollection<Toxic> Toxics { get; private set; }
+        public IReadOnlyCollection<Toxic> Toxics { get; private set; } = [];
 
         /// <summary>
         /// Sets a proxy as enabled.
@@ -51,7 +109,7 @@ namespace Toxiproxy.Client
         /// <param name="cancellationToken">The cancellation token.</param>
         public async Task EnableAsync(CancellationToken cancellationToken = default)
         {
-            _configuration.Enabled = true;
+            Enabled = true;
             await UpdateProxyAsync(cancellationToken);
         }
 
@@ -60,7 +118,7 @@ namespace Toxiproxy.Client
         /// </summary>
         public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
-            _configuration.Enabled = false;
+            Enabled = false;
             await UpdateProxyAsync(cancellationToken);
         }
 
@@ -121,9 +179,10 @@ namespace Toxiproxy.Client
         /// <param name="name">Name of the <see cref="Toxic"/> we want to remove.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyConnectionException"></exception>
-        public Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
+        public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
         {
-            return ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
+            await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
+            await GetActiveToxicsAsync(cancellationToken);
         }
 
         /// <summary>
@@ -141,11 +200,42 @@ namespace Toxiproxy.Client
             return (LatencyToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
+        /// <summary>
+        /// Check all proxy parameters to ensure they are valid.
+        /// </summary>
+        /// <exception cref="ProxyConfigurationException"></exception>
+        public void EnsureConfigurationIsValid()
+        {
+            if (string.IsNullOrEmpty(Name))
+            {
+                throw new ProxyConfigurationException(nameof(Name), "You must supply a name for this proxy.");
+            }
+
+            if (string.IsNullOrEmpty(Listen) || !IsListeningAddressValid(Listen))
+            {
+                throw new ProxyConfigurationException(nameof(Listen), "You must supply a valid listening address in the form [address]:[port].");
+            }
+
+            if (string.IsNullOrEmpty(Upstream) || !IsListeningAddressValid(Upstream))
+            {
+                throw new ProxyConfigurationException(nameof(Upstream), "You must supply a valid upstream address to proxy for, in the form [ip address/hostname]:[port].");
+            }
+        }
+
+        internal ProxyConfiguration Configuration => new()
+        {
+            Name = Name,
+            Listen = Listen,
+            Upstream = Upstream,
+            Enabled = Enabled,
+            Toxics = Toxics.Select(t => t.Configuration).ToArray()
+        };
+
         private async Task UpdateProxyAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var json = JsonSerializer.Serialize(_configuration, JsonOptions.Default);
+                var json = JsonSerializer.Serialize(Configuration, JsonOptions.Default);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
@@ -166,6 +256,20 @@ namespace Toxiproxy.Client
             }
         }
 
+        private async Task GetActiveToxicsAsync(CancellationToken cancellationToken = default)
+        {
+            var response = await ToxiproxyClient.HttpClient.GetAsync($"{_client.BaseUrl}/proxies/{Name}/toxics", cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var toxicsData = JsonSerializer.Deserialize<ToxicConfiguration[]>(json, JsonOptions.Default);
+            if (toxicsData is null)
+            {
+                throw new JsonException("Failed to deserialize toxics data.");
+            }
+            Toxics = toxicsData.Select(ToxicFactory.CreateToxic).ToArray();
+        }
+
         private async Task<Toxic> CreateToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
         {
             var json = JsonSerializer.Serialize(toxic.Configuration, JsonOptions.Default);
@@ -174,14 +278,44 @@ namespace Toxiproxy.Client
             var response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}/toxics", content, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var createdToxic = JsonSerializer.Deserialize<ToxicConfiguration>(responseJson, JsonOptions.Default);
-            if (createdToxic is null)
+            await GetActiveToxicsAsync(cancellationToken);
+            return ToxicFactory.CreateToxic(toxic.Configuration);
+        }
+
+        private static bool IsListeningAddressValid(string address)
+        {
+            Regex listeningAddressRegex = new(@"^(?<host>[^:]+):(?<port>\d+)$", RegexOptions.Compiled);
+            Regex looksLikeAnIPAddressRegex = new(@"^[\d.]+$", RegexOptions.Compiled);
+
+            var match = listeningAddressRegex.Match(address);
+            if (match.Success)
             {
-                throw new JsonException("Failed to deserialize the toxic data.");
+                string host = match.Groups["host"].Value;
+                string portStr = match.Groups["port"].Value;
+
+                // Validate port range
+                if (!int.TryParse(portStr, out int port) || port < 1 || port > 65535)
+                {
+                    return false;
+                }
+
+                // Validate IP address
+                if (looksLikeAnIPAddressRegex.IsMatch(host))
+                {
+                    if (!IPAddress.TryParse(host, out IPAddress addr))
+                    {
+                        return false;
+                    }
+
+                    // Reject things like "20.2" or "10.11.12"
+                    return addr.ToString() == host;
+                }
+
+                // Parse hostname
+                return Uri.CheckHostName(host) != UriHostNameType.Unknown;
             }
 
-            return ToxicFactory.CreateToxic(createdToxic);
+            return false;
         }
 
         /// <summary>
@@ -201,39 +335,22 @@ namespace Toxiproxy.Client
 
     /// <summary>
     /// Represents the configuration settings for a proxy.
+    /// Helper class for serialization/deserialization of proxy data.
     /// </summary>
-    public sealed record ProxyConfiguration
+    internal sealed record ProxyConfiguration
     {
-        /// <summary>
-        /// Name of the proxy.
-        /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Address, expressed as address:port, where the proxy listens for incoming connections.
-        /// </summary>
         [JsonPropertyName("listen")]
         public string Listen { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Address or hostname of the service we are proxying.
-        /// </summary>
         [JsonPropertyName("upstream")]
         public string Upstream { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Indicates whether the proxy is enabled or disabled.
-        /// </summary>
-        /// <remarks>
-        /// When created, proxies are enabled by default.
-        /// </remarks>
         [JsonPropertyName("enabled")]
         public bool Enabled { get; set; } = true;
 
-        /// <summary>
-        /// List of toxics configured on the proxy.
-        /// </summary>
         [JsonPropertyName("toxics")]
         public IReadOnlyCollection<ToxicConfiguration> Toxics { get; set; } = [];
     }

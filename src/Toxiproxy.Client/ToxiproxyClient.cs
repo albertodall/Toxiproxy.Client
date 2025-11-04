@@ -1,10 +1,15 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace Toxiproxy.Client
 {
+    /// <summary>
+    /// Client that interacts with a Toxiproxy server.
+    /// </summary>
+    /// <remarks>
+    /// Supports Toxiproxy servers from version 2.0.0 onwards.
+    /// </remarks>
     public sealed class ToxiproxyClient
     {
         private const string MinimumSupportedVersion = "2.0.0";
@@ -21,7 +26,7 @@ namespace Toxiproxy.Client
         /// <param name="hostName">The hostname of the Toxiproxy server. Defaults to "localhost".</param>
         /// <param name="port">The port number of the Toxiproxy server. Defaults to 8474.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The <see cref="ToxiproxyClient"/> instance to interact with the connected server.</returns>
+        /// <returns>The <see cref="ToxiproxyClient"/> instance that interacts with the connected server.</returns>
         /// <exception cref="JsonException">Thrown if there are issues in detecting the server version.</exception>
         /// <exception cref="ToxiproxyConnectionException">Thrown if the connection to the Toxiproxy server fails or if the server version is not supported.</exception>
         public static async Task<ToxiproxyClient> ConnectAsync(string hostName = "localhost", int port = 8474, CancellationToken cancellationToken = default)
@@ -77,13 +82,33 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Configures a new proxy on the Toxiproxy server.
         /// </summary>
-        /// <returns>The proxy configured.</returns>
-        public Task<Proxy> ConfigureProxy(Action<ProxyConfiguration> builder, CancellationToken cancellationToken = default)
+        /// <param name="builder">Proxy configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The configured proxy.</returns>
+        public async Task<Proxy> ConfigureProxyAsync(Action<Proxy> builder, CancellationToken cancellationToken = default)
         {
-            var config = new ProxyConfiguration();
-            builder(config);
-            EnsureProxyConfigurationIsValid(config);
-            return AddProxyAsync(config, cancellationToken);
+            var newProxy = new Proxy(this);
+            builder(newProxy);
+            newProxy.EnsureConfigurationIsValid();
+
+            try
+            {
+                var json = JsonSerializer.Serialize(newProxy.Configuration, JsonOptions.Default);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
+                if (response.StatusCode == HttpStatusCode.Conflict)
+                {
+                    throw new ProxyConfigurationException(nameof(newProxy.Name), $"Proxy with name '{newProxy.Name}' already exists");
+                }
+                response.EnsureSuccessStatusCode();
+
+                return newProxy;
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new ToxiproxyConnectionException($"Failed to create proxy '{newProxy.Name}'", ex);
+            }
         }
 
         /// <summary>
@@ -106,13 +131,7 @@ namespace Toxiproxy.Client
                     throw new JsonException("Failed to deserialize proxies data.");
                 }
 
-                var result = new List<Proxy>();
-                foreach (var kvp in proxies)
-                {
-                    result.Add(new Proxy(this, kvp.Value));
-                }
-
-                return result.AsReadOnly();
+                return proxies.Select(kvp => new Proxy(this, kvp.Value)).ToArray();
             }
             catch (HttpRequestException ex)
             {
@@ -121,7 +140,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Retrieves a proxy by its name from the server.
+        /// Retrieves a proxy from the server.
         /// </summary>
         /// <param name="name">The name of the proxy to retrieve.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -166,6 +185,9 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyConnectionException">Thrown if the connection to the Toxiproxy server fails.</exception>
+        /// <remarks>
+        /// "Reset" means enable all active proxies and remove all active toxics.
+        /// </remarks>
         public async Task ResetAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -177,88 +199,6 @@ namespace Toxiproxy.Client
             {
                 throw new ToxiproxyConnectionException($"Failed to reset Toxiproxy server at {BaseUrl}", ex);
             }
-        }
-
-        private async Task<Proxy> AddProxyAsync(ProxyConfiguration configuration, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var json = JsonSerializer.Serialize(configuration, JsonOptions.Default);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
-                if (response.StatusCode == HttpStatusCode.Conflict)
-                {
-                    throw new ProxyConfigurationException(nameof(configuration.Name), $"Proxy with name '{configuration.Name}' already exists");
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                var result = await response.Content.ReadAsStringAsync();
-                var newProxyConfiguration = JsonSerializer.Deserialize<ProxyConfiguration>(result, JsonOptions.Default);
-
-                return newProxyConfiguration is null
-                    ? throw new JsonException("Failed to deserialize the configuration of the created proxy.")
-                    : new Proxy(this, newProxyConfiguration);
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new ToxiproxyConnectionException($"Failed to create proxy '{configuration.Name}'", ex);
-            }
-        }
-
-        private static void EnsureProxyConfigurationIsValid(ProxyConfiguration configuration)
-        {
-            if (string.IsNullOrWhiteSpace(configuration.Name))
-            {
-                throw new ProxyConfigurationException(nameof(configuration.Name), "Configured proxy must have a name.");
-            }
-
-            if (string.IsNullOrWhiteSpace(configuration.Listen) || !IsListeningAddressValid(configuration.Listen))
-            {
-                throw new ProxyConfigurationException(nameof(configuration.Listen), "You must set a proxy listening address in the form <ip address>:<port>.");
-            }
-
-            if (string.IsNullOrWhiteSpace(configuration.Upstream) || !IsListeningAddressValid(configuration.Upstream))
-            {
-                throw new ProxyConfigurationException(nameof(configuration.Upstream), "You must set an upstream address to proxy for, in the form <ip address/hostname>:<port>.");
-            }
-        }
-
-        private static bool IsListeningAddressValid(string address)
-        {
-            Regex listeningAddressRegex = new(@"^(?<host>[^:]+):(?<port>\d+)$", RegexOptions.Compiled);
-            Regex looksLikeAnIPAddressRegex = new (@"^[\d.]+$", RegexOptions.Compiled);
-
-            var match = listeningAddressRegex.Match(address);
-            if (match.Success)
-            {
-                string host = match.Groups["host"].Value;
-                string portStr = match.Groups["port"].Value;
-
-                // Validate port range
-                if (!int.TryParse(portStr, out int port) || port < 1 || port > 65535)
-                {
-                    return false;
-                }
-
-                // Validate IP address
-                if (looksLikeAnIPAddressRegex.IsMatch(host))
-                {
-                    if (!IPAddress.TryParse(host, out IPAddress addr))
-                    { 
-                        return false;
-                    }
-
-                    // Reject things like "20.2" or "10.11.12"
-                    return addr.ToString() == host;
-                }
-
-                // Parse hostname
-                return Uri.CheckHostName(host) != UriHostNameType.Unknown;
-            }
-
-            return false;
         }
     }
 }
