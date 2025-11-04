@@ -110,7 +110,7 @@
         }
 
         [Fact]
-        public async Task Should_Throw_WhenSettingInvalidLatency_ForLatencyToxic()
+        public async Task Should_ThrowException_WhenSettingInvalidLatency_ForLatencyToxic()
         {
             Proxy proxy = await _client.ConfigureProxy(cfg =>
             {
@@ -134,7 +134,7 @@
         }
 
         [Fact]
-        public async Task Should_Throw_WhenSettingInvalidJitter_ForLatencyToxic()
+        public async Task Should_ThrowException_WhenSettingInvalidJitter_ForLatencyToxic()
         {
             Proxy proxy = await _client.ConfigureProxy(cfg =>
             {
@@ -156,7 +156,6 @@
             Assert.Equal("Jitter", ex.PropertyName);
             Assert.Contains("Jitter must be a non-negative value", ex.Message, StringComparison.InvariantCulture);
         }
-
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 

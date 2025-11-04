@@ -83,6 +83,12 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Fact]
+        public async Task Client_ShouldNotThrowException_WhenDeletingNonExistingProxy()
+        {
+            await _sut.DeleteProxyAsync("non_existing_proxy", TestContext.Current.CancellationToken);
+        }
+
+        [Fact]
         public async Task Client_ShouldRetrieveAllProxies_WhenServerHasProxies()
         {
             Proxy proxy1 = await _sut.ConfigureProxy(cfg =>
@@ -101,6 +107,13 @@ namespace Toxiproxy.Client.Tests
 
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
             Assert.Equal(2, proxies.Count);
+        }
+
+        [Fact]
+        public async Task Client_ShouldNotRetrieveProxies_WhenServerHasNoProxies()
+        {
+            var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
+            Assert.Empty(proxies);
         }
 
         [Fact]
@@ -164,6 +177,38 @@ namespace Toxiproxy.Client.Tests
             });
 
             Assert.Contains("You must set an upstream address to proxy for, in the form <ip address/hostname>:<port>", ex.Message, StringComparison.CurrentCulture);
+        }
+
+        [Fact]
+        public async Task Client_ShouldResetServer()
+        {
+            Proxy proxy1 = await _sut.ConfigureProxy(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example1.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            Proxy proxy2 = await _sut.ConfigureProxy(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:22222";
+                cfg.Upstream = "example2.com:80";
+            }, TestContext.Current.CancellationToken);
+
+            await proxy1.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, toxic =>
+            {
+                toxic.Latency = 1000;
+                toxic.Jitter = 100;
+            }, TestContext.Current.CancellationToken);
+
+            await proxy2.DisableAsync(TestContext.Current.CancellationToken);
+
+            await _sut.ResetAsync(TestContext.Current.CancellationToken);
+
+            var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
+            Assert.True(proxies.All(p => p.Enabled));
+            Assert.True(proxies.All(p => p.Toxics.Count == 0));
         }
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;
