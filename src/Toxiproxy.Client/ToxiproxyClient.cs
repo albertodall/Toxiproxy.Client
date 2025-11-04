@@ -139,8 +139,6 @@ namespace Toxiproxy.Client
                     return null;
                 }
 
-                response.EnsureSuccessStatusCode();
-
                 var json = await response.Content.ReadAsStringAsync();
                 var proxyConfiguration = JsonSerializer.Deserialize<ProxyConfiguration>(json, JsonOptions.Default);
 
@@ -159,24 +157,9 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <param name="name">The name of the proxy to delete.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <exception cref="ProxyNotFoundException">Thrown if the specified proxy does not exist.</exception>
-        /// <exception cref="ToxiproxyConnectionException">Thrown if there is a failure in connecting to the server or deleting the proxy.</exception>
-        public async Task DeleteProxyAsync(string name, CancellationToken cancellationToken = default)
+        public Task DeleteProxyAsync(string name, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                var response = await HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    throw new ProxyNotFoundException($"Proxy '{name}' not found");
-                }
-
-                response.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new ToxiproxyConnectionException($"Failed to delete proxy '{name}' from server {BaseUrl}", ex);
-            }
+            return HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
         }
 
         /// <summary>
