@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -73,16 +74,14 @@ namespace Toxiproxy.Client
         public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
         {
             var response = await ToxiproxyClient.HttpClient.GetAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             var toxicData = JsonSerializer.Deserialize<ToxicConfiguration>(json, JsonOptions.Default);
-            if (toxicData is not null)
-            {
-                return ToxicFactory.CreateToxic<T>(toxicData);
-            }
-
-            return null;
+            return ToxicFactory.CreateToxic<T>(toxicData!);
         }
 
         /// <summary>
@@ -122,17 +121,9 @@ namespace Toxiproxy.Client
         /// <param name="name">Name of the <see cref="Toxic"/> we want to remove.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyConnectionException"></exception>
-        public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
+        public Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                var response = await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new ToxiproxyConnectionException($"Failed to delete toxic '{name}' on proxy '{Name}'", ex);
-            }
+            return ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
         }
 
         /// <summary>
