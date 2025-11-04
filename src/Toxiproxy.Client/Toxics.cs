@@ -2,13 +2,17 @@
 namespace Toxiproxy.Client
 {
     /// <summary>
-    /// Instance of a "latency" toxic.
+    /// Implementation of the "latency" toxic.
     /// <see cref="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#latency"/>
     /// </summary>
     public sealed class LatencyToxic : Toxic
     {
-        internal LatencyToxic(ToxicConfiguration data) 
-            : base(ToxicType.Latency, data)
+        internal LatencyToxic() 
+            : base(ToxicType.Latency)
+        { }
+
+        internal LatencyToxic(ToxicConfiguration configuration)
+            : base(configuration)
         { }
 
         /// <summary>
