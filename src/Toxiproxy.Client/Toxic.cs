@@ -49,6 +49,10 @@ namespace Toxiproxy.Client
         /// </remarks>
         public ToxicDirection Stream => _configuration.Stream;
 
+        /// <summary>
+        /// Toxicity value of the toxic.
+        /// This value represents the probability of the toxic being applied to a link (defaults to 1.0, 100%).
+        /// </summary>
         public float Toxicity
         {
             get => _configuration.Toxicity;
@@ -63,10 +67,13 @@ namespace Toxiproxy.Client
             } 
         }
 
+        /// <summary>
+        /// Map of attributes/parameters applied to the toxic.
+        /// </summary>
         protected Dictionary<string, object> Attributes => _configuration.Attributes;
 
         /// <summary>
-        /// Read a single attribute from the Attributes dictionary.
+        /// Reads a single attribute from the Attributes dictionary.
         /// </summary>
         /// <typeparam name="T">The expected type of the attribute's value.</typeparam>
         /// <param name="key">The attribute name.</param>
@@ -102,20 +109,40 @@ namespace Toxiproxy.Client
         }
     }
 
+    /// <summary>
+    /// Set of parameters used to configure a toxic.
+    /// </summary>
     public sealed record ToxicConfiguration
     {
-        [JsonPropertyName("type")]
-        public string Type { get; set; } = string.Empty;
-
+        /// <summary>
+        /// Toxic name.
+        /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("stream")]
-        public string Stream { get; set; } = "downstream"; // Toxics work downstream by default
+        /// <summary>
+        /// Toxic type (e.g., "latency", "bandwidth", etc.)
+        /// </summary>
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Link direction to affect: "upstream" or "downstream".
+        /// Toxics work downstream by default.
+        /// </summary>
+        [JsonPropertyName("stream")]
+        public string Stream { get; set; } = "downstream";
+
+        /// <summary>
+        /// Toxicity value of the toxic.
+        /// This value represents the probability of the toxic being applied to a link (defaults to 1.0, 100%).
+        /// </summary>
         [JsonPropertyName("toxicity")]
         public float Toxicity { get; set; } = 1.0f;
 
+        /// <summary>
+        /// A map of toxic-specific attributes.
+        /// </summary>
         [JsonPropertyName("attributes")]
         public Dictionary<string, object> Attributes { get; set; } = [];
     }

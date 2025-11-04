@@ -1,12 +1,19 @@
 ﻿
 namespace Toxiproxy.Client
 {
+    /// <summary>
+    /// Instance of a "latency" toxic.
+    /// <see cref="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#latency"/>
+    /// </summary>
     public sealed class LatencyToxic : Toxic
     {
         internal LatencyToxic(ToxicConfiguration data) 
             : base(ToxicType.Latency, data)
         { }
 
+        /// <summary>
+        /// Latency time in milliseconds
+        /// </summary>
         public int Latency
         {
             get => GetAttribute<int>("latency");
@@ -21,6 +28,9 @@ namespace Toxiproxy.Client
             } 
         }
 
+        /// <summary>
+        /// Jitter time in milliseconds.
+        /// </summary>
         public int Jitter
         {
             get => GetAttribute<int>("jitter");
