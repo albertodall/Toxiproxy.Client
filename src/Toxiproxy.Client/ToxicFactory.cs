@@ -19,7 +19,7 @@
     {
         public static Toxic CreateToxic(ToxicConfiguration configuration)
         {
-            return configuration.Type.ToLowerInvariant() switch
+            var toxic = configuration.Type.ToLowerInvariant() switch
             {
                 ToxicType.Latency  => new LatencyToxic(configuration),
                 //"bandwidth" => new BandwidthToxic(data),
@@ -30,6 +30,8 @@
                 //"reset_peer" => new ResetPeerToxic(data),
                 _ => throw new InvalidOperationException($"Unknown toxic type: {configuration.Type}")
             };
+
+            return toxic;
         }
 
         /// <summary>

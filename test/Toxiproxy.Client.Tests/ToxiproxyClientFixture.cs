@@ -1,5 +1,3 @@
-using System.Xml.Linq;
-
 namespace Toxiproxy.Client.Tests
 {
     public sealed class ToxiproxyClientFixture : IClassFixture<ToxiproxyFixture>, IAsyncLifetime
@@ -152,7 +150,7 @@ namespace Toxiproxy.Client.Tests
                 }, TestContext.Current.CancellationToken);
             });
 
-            Assert.Contains("You must set a listening address in the form <ip address>:<port>", ex.Message, StringComparison.CurrentCulture);
+            Assert.Contains("You must set a proxy listening address in the form <ip address>:<port>", ex.Message, StringComparison.CurrentCulture);
         }
 
         [Theory]
@@ -196,7 +194,7 @@ namespace Toxiproxy.Client.Tests
                 cfg.Upstream = "example2.com:80";
             }, TestContext.Current.CancellationToken);
 
-            await proxy1.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, toxic =>
+            await proxy1.AddLatencyToxicAsync(toxic =>
             {
                 toxic.Latency = 1000;
                 toxic.Jitter = 100;

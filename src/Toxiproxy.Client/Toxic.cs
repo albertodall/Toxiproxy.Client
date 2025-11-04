@@ -4,33 +4,48 @@ using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
+    /// <summary>
+    /// Represents a toxic that can be applied to a proxy.
+    /// </summary>
     public abstract class Toxic
     {
-        private readonly ToxicConfiguration _configuration;
+        private string _name = string.Empty;
+        private float _toxicity = 1.0f;
 
-        protected Toxic(string toxicType, ToxicConfiguration configuration)
+        protected Toxic(string toxicType)
         {
-            if (string.IsNullOrEmpty(configuration.Name))
-            {
-                throw new ToxicConfigurationException(nameof(configuration.Name), "You must provide a name for the toxic.");
-            }
+            Name = $"{toxicType}_{Stream}";
+            Type = toxicType;
+        }
 
-            if (configuration.Toxicity < 0.0f || configuration.Toxicity > 1.0f)
-            {
-                throw new ToxicConfigurationException(nameof(configuration.Toxicity), "Toxicity must be a value between 0.0 and 1.0.");
-            }
-
-            _configuration = configuration;
-            _configuration.Type = toxicType;
+        protected Toxic(ToxicConfiguration configuration)
+            : this(configuration.Type)
+        {
+            Name = configuration.Name;
+            Stream = configuration.Stream;
+            Toxicity = configuration.Toxicity;
+            Attributes = configuration.Attributes;
         }
 
         /// <summary>
         /// Name of the toxic.
         /// </summary>
         /// <remarks>
-        /// The name must be unique per proxy, and it cannot be changed after creation.
+        /// The name must be unique per proxy.
         /// </remarks>
-        public string Name => _configuration.Name;
+        public string Name 
+        {
+            get { return _name; }
+            set 
+            { 
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ToxicConfigurationException(nameof(Name), "You must provide a name for the toxic.");
+                }
+
+                _name = value;
+            }
+        }
 
         /// <summary>
         /// Type of toxic.
@@ -39,15 +54,12 @@ namespace Toxiproxy.Client
         /// <remarks>
         /// The toxic type cannot be changed after creation.
         /// </remarks>
-        public string Type => _configuration.Type;
+        public string Type { get; private set; }
 
         /// <summary>
         /// Toxic working direction: upstream or downstream.
         /// </summary>
-        /// <remarks>
-        /// The stream direction cannot be changed after creation.
-        /// </remarks>
-        public ToxicDirection Stream => _configuration.Stream;
+        public ToxicDirection Stream { get; set; } = ToxicDirection.Downstream;
 
         /// <summary>
         /// Toxicity value of the toxic.
@@ -55,7 +67,7 @@ namespace Toxiproxy.Client
         /// </summary>
         public float Toxicity
         {
-            get => _configuration.Toxicity;
+            get => _toxicity;
             set
             {
                 if (value < 0.0f || value > 1.0f)
@@ -63,14 +75,14 @@ namespace Toxiproxy.Client
                     throw new ToxicConfigurationException(nameof(Toxicity), "Toxicity must be a value between 0.0 and 1.0.");
                 }
 
-                _configuration.Toxicity = value;
+                _toxicity = value;
             } 
         }
 
         /// <summary>
         /// Map of attributes/parameters applied to the toxic.
         /// </summary>
-        protected Dictionary<string, object> Attributes => _configuration.Attributes;
+        public Dictionary<string, object> Attributes { get; private set; } = new();
 
         /// <summary>
         /// Reads a single attribute from the Attributes dictionary.
@@ -100,7 +112,14 @@ namespace Toxiproxy.Client
             return default!;
         }
 
-        internal ToxicConfiguration Configuration => _configuration;
+        internal ToxicConfiguration Configuration => new()
+        {
+            Name = Name,
+            Type = Type,
+            Stream = Stream,
+            Toxicity = Toxicity,
+            Attributes = Attributes
+        };
 
         public override string ToString()
         {
@@ -131,7 +150,7 @@ namespace Toxiproxy.Client
         /// Toxics work downstream by default.
         /// </summary>
         [JsonPropertyName("stream")]
-        public string Stream { get; set; } = "downstream";
+        public string Stream { get; set; } = ToxicDirection.Downstream;
 
         /// <summary>
         /// Toxicity value of the toxic.

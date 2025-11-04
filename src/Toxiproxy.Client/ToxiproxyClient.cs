@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -126,7 +125,7 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <param name="name">The name of the proxy to retrieve.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A <see cref="Proxy"/> object representing the proxy configuration if found; otherwise, <see langword="null"/> if the proxy does not exist.</returns>
+        /// <returns>A <see cref="Proxy"/> object representing the proxy configuration if found, or <see langword="null"/> if the proxy does not exist.</returns>
         /// <exception cref="JsonException">Thrown if there are response deserialization issues.</exception>
         /// <exception cref="ToxiproxyConnectionException">Thrown if there is an error while connecting to the server.</exception>
         public async Task<Proxy?> GetProxyAsync(string name, CancellationToken cancellationToken = default)
@@ -188,7 +187,6 @@ namespace Toxiproxy.Client
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
-
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
                     throw new ProxyConfigurationException(nameof(configuration.Name), $"Proxy with name '{configuration.Name}' already exists");
@@ -200,16 +198,12 @@ namespace Toxiproxy.Client
                 var newProxyConfiguration = JsonSerializer.Deserialize<ProxyConfiguration>(result, JsonOptions.Default);
 
                 return newProxyConfiguration is null
-                    ? throw new JsonException("Failed to deserialize the created proxy data.")
+                    ? throw new JsonException("Failed to deserialize the configuration of the created proxy.")
                     : new Proxy(this, newProxyConfiguration);
             }
             catch (HttpRequestException ex)
             {
                 throw new ToxiproxyConnectionException($"Failed to create proxy '{configuration.Name}'", ex);
-            }
-            catch (TaskCanceledException ex)
-            {
-                throw new ToxiproxyConnectionException($"Request timeout while creating proxy '{configuration.Name}'", ex);
             }
         }
 
@@ -222,7 +216,7 @@ namespace Toxiproxy.Client
 
             if (string.IsNullOrWhiteSpace(configuration.Listen) || !IsListeningAddressValid(configuration.Listen))
             {
-                throw new ProxyConfigurationException(nameof(configuration.Listen), "You must set a listening address in the form <ip address>:<port>.");
+                throw new ProxyConfigurationException(nameof(configuration.Listen), "You must set a proxy listening address in the form <ip address>:<port>.");
             }
 
             if (string.IsNullOrWhiteSpace(configuration.Upstream) || !IsListeningAddressValid(configuration.Upstream))

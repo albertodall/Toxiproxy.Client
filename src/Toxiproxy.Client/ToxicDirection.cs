@@ -15,7 +15,17 @@
         public static ToxicDirection Upstream => new("upstream");
         public static ToxicDirection Downstream => new("downstream");
 
-        public static implicit operator ToxicDirection(string direction) => new(direction);
+        public static implicit operator ToxicDirection(string value)
+        {
+            string direction = value.ToLowerInvariant();
+            if (direction != "upstream" && direction != "downstream")
+            {
+                throw new ToxicConfigurationException(nameof(direction), "Direction must be either 'upstream' or 'downstream'.");
+            }
+
+            return new ToxicDirection(direction);
+        }
+
         public static implicit operator string(ToxicDirection direction) => direction.ToString();
 
         public override string ToString() => _direction;

@@ -134,16 +134,11 @@ namespace Toxiproxy.Client
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="LatencyToxic"/>.</returns>
-        public async Task<LatencyToxic> AddLatencyToxicAsync(string name, ToxicDirection direction, Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
         {
-            var toxic = new LatencyToxic(new ToxicConfiguration()
-            {
-                Name = name,
-                Stream = direction,
-            });
-
+            var toxic = new LatencyToxic();
             builder(toxic);
-            return (LatencyToxic)await CreateToxicAsync(toxic.Configuration, cancellationToken);
+            return (LatencyToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         private async Task UpdateProxyAsync(CancellationToken cancellationToken = default)
@@ -171,9 +166,9 @@ namespace Toxiproxy.Client
             }
         }
 
-        private async Task<Toxic> CreateToxicAsync(ToxicConfiguration config, CancellationToken cancellationToken = default)
+        private async Task<Toxic> CreateToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
         {
-            var json = JsonSerializer.Serialize(config, JsonOptions.Default);
+            var json = JsonSerializer.Serialize(toxic.Configuration, JsonOptions.Default);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}/toxics", content, cancellationToken);

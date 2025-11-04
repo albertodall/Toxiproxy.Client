@@ -19,7 +19,7 @@
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg => 
+            LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg => 
             { 
                 cfg.Toxicity = 1.0f;
                 cfg.Latency = 1000;
@@ -44,7 +44,7 @@
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+            LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg =>
             {
                 cfg.Toxicity = 1.0f;
                 cfg.Latency = 1000;
@@ -69,7 +69,7 @@
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+            LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg =>
             {
                 cfg.Toxicity = 1.0f;
                 cfg.Latency = 1000;
@@ -94,7 +94,7 @@
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+            LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg =>
             {
                 cfg.Toxicity = 1.0f;
                 cfg.Latency = 1000;
@@ -121,7 +121,7 @@
 
             var ex = await Assert.ThrowsAsync<ToxicConfigurationException>(async () =>
             {
-                LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+                LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg =>
                 {
                     cfg.Toxicity = 1.0f;
                     cfg.Latency = -42;
@@ -145,7 +145,7 @@
 
             var ex = await Assert.ThrowsAsync<ToxicConfigurationException>(async () =>
             {
-                LatencyToxic sut = await proxy.AddLatencyToxicAsync("latency_downstream", ToxicDirection.Downstream, cfg =>
+                LatencyToxic sut = await proxy.AddLatencyToxicAsync(cfg =>
                 {
                     cfg.Toxicity = 1.0f;
                     cfg.Latency = 100;
