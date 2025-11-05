@@ -28,7 +28,7 @@ namespace Toxiproxy.Client
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="ToxiproxyClient"/> instance that interacts with the connected server.</returns>
         /// <exception cref="JsonException">Thrown if there are issues in detecting the server version.</exception>
-        /// <exception cref="ToxiproxyConnectionException">Thrown if the connection to the Toxiproxy server fails or if the server version is not supported.</exception>
+        /// <exception cref="ToxiproxyException">Thrown if the connection to the Toxiproxy server fails or if the server version is not supported.</exception>
         public static async Task<ToxiproxyClient> ConnectAsync(string hostName = "localhost", int port = 8474, CancellationToken cancellationToken = default)
         {
             string baseUrl = $"http://{hostName}:{port}";
@@ -46,13 +46,13 @@ namespace Toxiproxy.Client
                 {
                     (null, _) => throw new JsonException("Failed to deserialize server version data."),
                     (Version current, Version supported) 
-                        when current < supported => throw new ToxiproxyConnectionException($"Toxiproxy server version is not supported. Minimum supported version is {MinimumSupportedVersion}."),
+                        when current < supported => throw new ToxiproxyException($"Toxiproxy server version is not supported. Minimum supported version is {MinimumSupportedVersion}."),
                     (Version current, _) => current.ToString()
                 };
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Unable to connect to Toxiproxy server at {baseUrl}.", ex);
+                throw new ToxiproxyException($"Unable to connect to Toxiproxy server at {baseUrl}.", ex);
             }
 
             return new ToxiproxyClient(baseUrl, version);
@@ -99,7 +99,7 @@ namespace Toxiproxy.Client
                 var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
                 if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    throw new ProxyConfigurationException(nameof(newProxy.Name), $"Proxy with name '{newProxy.Name}' already exists");
+                    throw new ToxiproxyException($"Proxy with name '{newProxy.Name}' already exists");
                 }
                 response.EnsureSuccessStatusCode();
 
@@ -107,7 +107,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to create proxy '{newProxy.Name}'", ex);
+                throw new ToxiproxyException($"Failed to create proxy '{newProxy.Name}'", ex);
             }
         }
 
@@ -135,7 +135,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to retrieve proxies from server {BaseUrl}.", ex);
+                throw new ToxiproxyException($"Failed to retrieve proxies from server {BaseUrl}.", ex);
             }
         }
 
@@ -166,7 +166,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to retrieve proxy '{name}' from server {BaseUrl}", ex);
+                throw new ToxiproxyException($"Failed to retrieve proxy '{name}' from server {BaseUrl}", ex);
             }
         }
 
@@ -197,7 +197,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to reset Toxiproxy server at {BaseUrl}", ex);
+                throw new ToxiproxyException($"Failed to reset Toxiproxy server at {BaseUrl}", ex);
             }
         }
     }

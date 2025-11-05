@@ -57,7 +57,7 @@ namespace Toxiproxy.Client.Tests
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            var ex = await Assert.ThrowsAsync<ProxyConfigurationException>(async () =>
+            var ex = await Assert.ThrowsAsync<ToxiproxyException>(async () =>
             {
                 Proxy proxy2 = await _sut.ConfigureProxyAsync(cfg =>
                 {

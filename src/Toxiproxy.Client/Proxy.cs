@@ -169,7 +169,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to update toxic '{toxic.Name}' on proxy '{Name}'", ex);
+                throw new ToxiproxyException($"Failed to update toxic '{toxic.Name}' on proxy '{Name}'", ex);
             }
         }
 
@@ -178,7 +178,7 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <param name="name">Name of the <see cref="Toxic"/> we want to remove.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <exception cref="ToxiproxyConnectionException"></exception>
+        /// <exception cref="ToxiproxyException"></exception>
         public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
         {
             await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
@@ -252,7 +252,7 @@ namespace Toxiproxy.Client
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyConnectionException($"Failed to update proxy '{Name}'", ex);
+                throw new ToxiproxyException($"Failed to update proxy '{Name}'", ex);
             }
         }
 
