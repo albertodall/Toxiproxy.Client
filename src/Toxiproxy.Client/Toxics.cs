@@ -3,7 +3,7 @@ namespace Toxiproxy.Client
 {
     /// <summary>
     /// Implementation of the "latency" toxic.
-    /// <see cref="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#latency"/>
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#latency"/>
     /// </summary>
     public sealed class LatencyToxic : Toxic
     {
