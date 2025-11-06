@@ -112,15 +112,6 @@ namespace Toxiproxy.Client
             return default!;
         }
 
-        internal ToxicConfiguration Configuration => new()
-        {
-            Name = Name,
-            Type = Type,
-            Stream = Stream,
-            Toxicity = Toxicity,
-            Attributes = Attributes
-        };
-
         public override string ToString()
         {
             var attributes = string.Join(", ", Attributes.Select(kvp => $"{kvp.Key}={kvp.Value}"));
@@ -129,7 +120,7 @@ namespace Toxiproxy.Client
     }
 
     /// <summary>
-    /// Set of parameters used to configure a toxic.
+    /// Set of parameters needed to configure a toxic.
     /// Helper class for serialization/deserialization of toxic data.
     /// </summary>
     internal sealed record ToxicConfiguration

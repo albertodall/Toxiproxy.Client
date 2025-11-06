@@ -152,7 +152,7 @@ namespace Toxiproxy.Client
         {
             try
             {
-                var toxicConfig = JsonSerializer.Serialize(toxic.Configuration, JsonOptions.Default);
+                var toxicConfig = JsonSerializer.Serialize(toxic.GetConfiguration(), JsonOptions.Default);
                 var content = new StringContent(toxicConfig, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
@@ -201,7 +201,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Check all proxy parameters to ensure they are valid.
+        /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>
         public void EnsureConfigurationIsValid()
@@ -222,20 +222,11 @@ namespace Toxiproxy.Client
             }
         }
 
-        internal ProxyConfiguration Configuration => new()
-        {
-            Name = Name,
-            Listen = Listen,
-            Upstream = Upstream,
-            Enabled = Enabled,
-            Toxics = Toxics.Select(t => t.Configuration).ToArray()
-        };
-
         private async Task UpdateProxyAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var json = JsonSerializer.Serialize(Configuration, JsonOptions.Default);
+                var json = JsonSerializer.Serialize(this.GetConfiguration(), JsonOptions.Default);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response;
@@ -272,14 +263,14 @@ namespace Toxiproxy.Client
 
         private async Task<Toxic> CreateToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
         {
-            var json = JsonSerializer.Serialize(toxic.Configuration, JsonOptions.Default);
+            var json = JsonSerializer.Serialize(toxic.GetConfiguration(), JsonOptions.Default);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await ToxiproxyClient.HttpClient.PostAsync($"{_client.BaseUrl}/proxies/{Name}/toxics", content, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             await GetActiveToxicsAsync(cancellationToken);
-            return ToxicFactory.CreateToxic(toxic.Configuration);
+            return ToxicFactory.CreateToxic(toxic.GetConfiguration());
         }
 
         private static bool IsListeningAddressValid(string address)

@@ -93,7 +93,7 @@ namespace Toxiproxy.Client
 
             try
             {
-                var json = JsonSerializer.Serialize(newProxy.Configuration, JsonOptions.Default);
+                var json = JsonSerializer.Serialize(newProxy.GetConfiguration(), JsonOptions.Default);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await HttpClient.PostAsync($"{BaseUrl}/proxies", content, cancellationToken);
