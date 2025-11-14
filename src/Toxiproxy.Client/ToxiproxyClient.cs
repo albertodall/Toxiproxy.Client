@@ -12,7 +12,7 @@ namespace Toxiproxy.Client
     /// </remarks>
     public sealed class ToxiproxyClient
     {
-        private const string MinimumSupportedVersion = "2.0.0";
+        private static readonly Version MinimumSupportedVersion = new("2.0.0");
 
         private ToxiproxyClient(string baseUrl, string serverVersion)
         {
@@ -42,7 +42,7 @@ namespace Toxiproxy.Client
                 var json = await response.Content.ReadAsStringAsync();
                 var serverVersion = JsonSerializer.Deserialize<Version>(json, JsonOptions.Default);
 
-                version = (serverVersion, Version.Parse(MinimumSupportedVersion)) switch
+                version = (serverVersion, MinimumSupportedVersion) switch
                 {
                     (null, _) => throw new JsonException("Failed to deserialize server version data."),
                     (Version current, Version supported) 
@@ -116,7 +116,7 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <returns>An list of <see cref="Proxy"/> objects representing the proxies retrieved from the server.</returns>
         /// <exception cref="JsonException">Thrown if there are response deserialization issues.</exception>
-        /// <exception cref="ToxiproxyConnectionException">Thrown if there is an error while connecting to the server.</exception>
+        /// <exception cref="ToxiproxyException">Thrown if there is an error while connecting to the server.</exception>
         public async Task<IReadOnlyList<Proxy>> GetProxiesAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -131,7 +131,7 @@ namespace Toxiproxy.Client
                     throw new JsonException("Failed to deserialize proxies data.");
                 }
 
-                return proxies.Select(kvp => new Proxy(this, kvp.Value)).ToArray();
+                return [..proxies.Select(kvp => new Proxy(this, kvp.Value))];
             }
             catch (HttpRequestException ex)
             {
@@ -146,7 +146,7 @@ namespace Toxiproxy.Client
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Proxy"/> object representing the proxy configuration if found, or <see langword="null"/> if the proxy does not exist.</returns>
         /// <exception cref="JsonException">Thrown if there are response deserialization issues.</exception>
-        /// <exception cref="ToxiproxyConnectionException">Thrown if there is an error while connecting to the server.</exception>
+        /// <exception cref="ToxiproxyException">Thrown if there is an error while connecting to the server.</exception>
         public async Task<Proxy?> GetProxyAsync(string name, CancellationToken cancellationToken = default)
         {
             try
@@ -175,18 +175,26 @@ namespace Toxiproxy.Client
         /// </summary>
         /// <param name="name">The name of the proxy to delete.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
+        /// <exception cref="ToxiproxyException">Thrown if there is an error while connecting to the server.</exception>
         public Task DeleteProxyAsync(string name, CancellationToken cancellationToken = default)
         {
-            return HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
+            try
+            {
+                return HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new ToxiproxyException($"Failed to delete proxy '{name}' from server {BaseUrl}", ex);
+            }
         }
 
         /// <summary>
         /// Resets the Toxiproxy server calling the designated endpoint.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <exception cref="ToxiproxyConnectionException">Thrown if the connection to the Toxiproxy server fails.</exception>
+        /// <exception cref="ToxiproxyException">Thrown if the connection to the Toxiproxy server fails.</exception>
         /// <remarks>
-        /// "Reset" means enable all active proxies and remove all active toxics.
+        /// "Reset" means enabling all active proxies and removing all active toxics.
         /// </remarks>
         public async Task ResetAsync(CancellationToken cancellationToken = default)
         {
