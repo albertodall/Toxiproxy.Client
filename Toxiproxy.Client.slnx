@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="docker-compose.yml" />
+  </Folder>
+  <Project Path="src/Toxiproxy.Client/Toxiproxy.Client.csproj" />
+  <Project Path="test/Toxiproxy.Client.Tests/Toxiproxy.Client.Tests.csproj" />
+</Solution>
