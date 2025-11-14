@@ -9,9 +9,6 @@ namespace Toxiproxy.Client
     /// </summary>
     public abstract class Toxic
     {
-        private string _name = string.Empty;
-        private float _toxicity = 1.0f;
-
         protected Toxic(string toxicType)
         {
             Name = $"{toxicType}_{Stream}";
@@ -35,16 +32,10 @@ namespace Toxiproxy.Client
         /// </remarks>
         public string Name 
         {
-            get { return _name; }
-            set 
-            { 
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new ToxicConfigurationException(nameof(Name), "You must provide a name for the toxic.");
-                }
-
-                _name = value;
-            }
+            get => field;
+            set => field = !string.IsNullOrEmpty(value) 
+                ? value 
+                : throw new ToxicConfigurationException(nameof(Name), "You must provide a name for the toxic.");
         }
 
         /// <summary>
@@ -67,17 +58,11 @@ namespace Toxiproxy.Client
         /// </summary>
         public float Toxicity
         {
-            get => _toxicity;
-            set
-            {
-                if (value < 0.0f || value > 1.0f)
-                {
-                    throw new ToxicConfigurationException(nameof(Toxicity), "Toxicity must be a value between 0.0 and 1.0.");
-                }
-
-                _toxicity = value;
-            } 
-        }
+            get => field;
+            set => field = (value < 0.0f || value > 1.0f)
+                ? throw new ToxicConfigurationException(nameof(Toxicity), "Toxicity must be a value between 0.0 and 1.0.")
+                : value;
+        } = 1.0f;
 
         /// <summary>
         /// Map of attributes/parameters applied to the toxic.
