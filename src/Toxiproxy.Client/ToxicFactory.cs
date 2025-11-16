@@ -29,7 +29,7 @@
                 ToxicType.SlowClose => new SlowCloseToxic(configuration),
                 ToxicType.Slicer => new SlicerToxic(configuration),
                 ToxicType.LimitData => new LimitDataToxic(configuration),
-                //"reset_peer" => new ResetPeerToxic(data),
+                ToxicType.ResetPeer => new ResetPeerToxic(configuration),
                 _ => throw new ToxicConfigurationException(nameof(configuration.Type), $"Unknown toxic type: {toxicType}")
             };
         }

@@ -266,6 +266,19 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
+        /// Configures a <see cref="ResetPeerToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="ResetPeerToxic"/>.</returns>
+        public async Task<ResetPeerToxic> AddResetPeerToxicAsync(Action<ResetPeerToxic> builder, CancellationToken cancellationToken = default)
+        {
+            ResetPeerToxic toxic = new();
+            builder(toxic);
+            return (ResetPeerToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
         /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>
