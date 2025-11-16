@@ -240,6 +240,19 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
+        /// Configures a <see cref="SlicerToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="SlicerToxic"/>.</returns>
+        public async Task<SlicerToxic> AddSlicerToxicAsync(Action<SlicerToxic> builder, CancellationToken cancellationToken = default)
+        {
+            SlicerToxic toxic = new();
+            builder(toxic);
+            return (SlicerToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
         /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>
