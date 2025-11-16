@@ -4,6 +4,7 @@ namespace Toxiproxy.Client
     /// <summary>
     /// Implementation of the "latency" toxic.
     /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#latency"/>
+    /// Adds a delay to all data going through the proxy. The delay is equal to latency +/- jitter.
     /// </summary>
     public sealed class LatencyToxic : Toxic
     {
@@ -53,6 +54,7 @@ namespace Toxiproxy.Client
     /// <summary>
     /// Implementation of the "bandwidth" toxic.
     /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#bandwidth"/>
+    /// Limits a connection to a maximum number of kilobytes per second.
     /// </summary>
     public sealed class BandwidthToxic : Toxic
     {
@@ -85,10 +87,8 @@ namespace Toxiproxy.Client
     /// <summary>
     /// Implementation of the "timeout" toxic.
     /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#timeout"/>
-    /// </summary>
-    /// <remarks>
     /// If timeout is 0, the connection won't close, and data will be dropped until the toxic is removed.
-    /// </remarks>
+    /// </summary>
     public sealed class TimeoutToxic : Toxic
     {
         internal TimeoutToxic()
@@ -113,6 +113,39 @@ namespace Toxiproxy.Client
                 }
 
                 Attributes["timeout"] = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Implementation of the "slow_close" toxic.
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#slow_close"/>
+    /// Delays the TCP socket from closing until delay has elapsed.
+    /// </summary>
+    public sealed class SlowCloseToxic : Toxic
+    {
+        internal SlowCloseToxic()
+            : base(ToxicType.SlowClose)
+        { }
+
+        internal SlowCloseToxic(ToxicConfiguration configuration)
+            : base(configuration)
+        { }
+
+        /// <summary>
+        /// Delay time in milliseconds.
+        /// </summary>
+        public int Delay
+        {
+            get => GetAttribute<int>("delay");
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ToxicConfigurationException(nameof(Delay), "Delay must be a non-negative value.");
+                }
+
+                Attributes["delay"] = value;
             }
         }
     }

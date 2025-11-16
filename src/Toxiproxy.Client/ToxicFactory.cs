@@ -26,7 +26,7 @@
                 ToxicType.Latency => new LatencyToxic(configuration),
                 ToxicType.Bandwidth => new BandwidthToxic(configuration),
                 ToxicType.Timeout => new TimeoutToxic(configuration),
-                //"slow_close" => new SlowCloseToxic(data),
+                ToxicType.SlowClose => new SlowCloseToxic(configuration),
                 //"slicer" => new SlicerToxic(data),
                 //"limit_data" => new LimitDataToxic(data),
                 //"reset_peer" => new ResetPeerToxic(data),
