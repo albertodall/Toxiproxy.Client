@@ -214,6 +214,19 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
+        /// Configures a <see cref="TimeoutToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="TimeoutToxic"/>.</returns>
+        public async Task<TimeoutToxic> AddTimeoutToxicAsync(Action<TimeoutToxic> builder, CancellationToken cancellationToken = default)
+        {
+            TimeoutToxic toxic = new();
+            builder(toxic);
+            return (TimeoutToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
         /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>

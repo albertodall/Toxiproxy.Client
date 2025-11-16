@@ -25,7 +25,7 @@
             {
                 ToxicType.Latency => new LatencyToxic(configuration),
                 ToxicType.Bandwidth => new BandwidthToxic(configuration),
-                //"timeout" => new TimeoutToxic(data),
+                ToxicType.Timeout => new TimeoutToxic(configuration),
                 //"slow_close" => new SlowCloseToxic(data),
                 //"slicer" => new SlicerToxic(data),
                 //"limit_data" => new LimitDataToxic(data),
@@ -37,7 +37,7 @@
         /// <summary>
         /// Creates a toxic based on the provided configuration.
         /// </summary>
-        /// <typeparam name="T">Type of the resultng <see cref="Toxic"/>.</typeparam>
+        /// <typeparam name="T">Type of the created <see cref="Toxic"/>.</typeparam>
         /// <param name="configuration">The toxic configuration.</param>
         /// <returns>The instance of the <see cref="Toxic"/>.</returns>
         /// <exception cref="InvalidCastException"></exception>
