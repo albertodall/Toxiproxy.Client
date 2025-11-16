@@ -227,6 +227,19 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
+        /// Configures a <see cref="SlowCloseToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="SlowCloseToxic"/>.</returns>
+        public async Task<SlowCloseToxic> AddSlowCloseToxicAsync(Action<SlowCloseToxic> builder, CancellationToken cancellationToken = default)
+        {
+            SlowCloseToxic toxic = new();
+            builder(toxic);
+            return (SlowCloseToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
         /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>
