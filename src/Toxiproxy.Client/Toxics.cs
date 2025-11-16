@@ -81,4 +81,39 @@ namespace Toxiproxy.Client
             }
         }
     }
+
+    /// <summary>
+    /// Implementation of the "timeout" toxic.
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#timeout"/>
+    /// </summary>
+    /// <remarks>
+    /// If timeout is 0, the connection won't close, and data will be dropped until the toxic is removed.
+    /// </remarks>
+    public sealed class TimeoutToxic : Toxic
+    {
+        internal TimeoutToxic()
+            : base(ToxicType.Timeout)
+        { }
+
+        internal TimeoutToxic(ToxicConfiguration configuration)
+            : base(configuration)
+        { }
+
+        /// <summary>
+        /// Timeout time in milliseconds.
+        /// </summary>
+        public int Timeout
+        {
+            get => GetAttribute<int>("timeout");
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ToxicConfigurationException(nameof(Timeout), "Timeout must be a non-negative value.");
+                }
+
+                Attributes["timeout"] = value;
+            }
+        }
+    }
 }
