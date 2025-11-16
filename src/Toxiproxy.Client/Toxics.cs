@@ -251,4 +251,37 @@ namespace Toxiproxy.Client
             }
         }
     }
+
+    /// <summary>
+    /// Implementation of the "reset_peer" toxic.
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#reset_peer"/>
+    /// Simulate TCP RESET (Connection reset by peer) on the connections by closing the stub Input immediately or after a timeout.
+    /// </summary>
+    public sealed class ResetPeerToxic : Toxic
+    {
+        public ResetPeerToxic() 
+            : base(ToxicType.ResetPeer)
+        { }
+
+        internal ResetPeerToxic(ToxicConfiguration configuration)
+            : base(configuration)
+        { }
+
+        /// <summary>
+        /// Timeout time in milliseconds.
+        /// </summary>
+        public int Timeout
+        {
+            get => GetAttribute<int>("timeout");
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ToxicConfigurationException(nameof(Timeout), "Timeout must be a non-negative value.");
+                }
+
+                Attributes["timeout"] = value;
+            }
+        }
+    }
 }
