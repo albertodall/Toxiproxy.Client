@@ -3,6 +3,7 @@
     /// <summary>
     /// List of supported toxic types.
     /// This list maps against the values expected by Toxiproxy server.
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#toxics"/>
     /// </summary>
     internal static class ToxicType
     {
@@ -19,19 +20,18 @@
     {
         public static Toxic CreateToxic(ToxicConfiguration configuration)
         {
-            var toxic = configuration.Type.ToLowerInvariant() switch
+            string toxicType = configuration.Type.ToLowerInvariant();
+            return toxicType switch
             {
-                ToxicType.Latency  => new LatencyToxic(configuration),
-                //"bandwidth" => new BandwidthToxic(data),
+                ToxicType.Latency => new LatencyToxic(configuration),
+                ToxicType.Bandwidth => new BandwidthToxic(configuration),
                 //"timeout" => new TimeoutToxic(data),
                 //"slow_close" => new SlowCloseToxic(data),
                 //"slicer" => new SlicerToxic(data),
                 //"limit_data" => new LimitDataToxic(data),
                 //"reset_peer" => new ResetPeerToxic(data),
-                _ => throw new InvalidOperationException($"Unknown toxic type: {configuration.Type}")
+                _ => throw new ToxicConfigurationException(nameof(configuration.Type), $"Unknown toxic type: {toxicType}")
             };
-
-            return toxic;
         }
 
         /// <summary>
