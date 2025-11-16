@@ -67,7 +67,7 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Map of attributes/parameters applied to the toxic.
         /// </summary>
-        public Dictionary<string, object> Attributes { get; private set; } = new();
+        internal Dictionary<string, object> Attributes { get; private set; } = new();
 
         /// <summary>
         /// Reads a single attribute from the Attributes dictionary.
