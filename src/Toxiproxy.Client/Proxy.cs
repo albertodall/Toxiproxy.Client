@@ -253,6 +253,19 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
+        /// Configures a <see cref="LimitDataToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="LimitDataToxic"/>.</returns>
+        public async Task<LimitDataToxic> AddLimitDataToxicAsync(Action<LimitDataToxic> builder, CancellationToken cancellationToken = default)
+        {
+            LimitDataToxic toxic = new();
+            builder(toxic);
+            return (LimitDataToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
         /// Checks all proxy parameters to ensure they are valid.
         /// </summary>
         /// <exception cref="ProxyConfigurationException"></exception>

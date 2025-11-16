@@ -28,7 +28,7 @@
                 ToxicType.Timeout => new TimeoutToxic(configuration),
                 ToxicType.SlowClose => new SlowCloseToxic(configuration),
                 ToxicType.Slicer => new SlicerToxic(configuration),
-                //"limit_data" => new LimitDataToxic(data),
+                ToxicType.LimitData => new LimitDataToxic(configuration),
                 //"reset_peer" => new ResetPeerToxic(data),
                 _ => throw new ToxicConfigurationException(nameof(configuration.Type), $"Unknown toxic type: {toxicType}")
             };

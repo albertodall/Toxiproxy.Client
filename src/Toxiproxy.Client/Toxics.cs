@@ -221,4 +221,34 @@ namespace Toxiproxy.Client
             }
         }
     }
+
+    /// <summary>
+    /// Implementation of the "limit_data" toxic.
+    /// <see href="https://github.com/Shopify/toxiproxy?tab=readme-ov-file#limit_data"/>
+    /// Closes connection when transmitted data exceeded limit.
+    /// </summary>
+    public sealed class LimitDataToxic : Toxic
+    {
+        internal LimitDataToxic() 
+            : base(ToxicType.LimitData)
+        { }
+
+        internal LimitDataToxic(ToxicConfiguration configuration)
+            : base(configuration)
+        { }
+
+        public int Bytes 
+        { 
+            get => GetAttribute<int>("bytes");
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ToxicConfigurationException(nameof(Bytes), "Bytes must be a non-negative value.");
+                }
+
+                Attributes["bytes"] = value; 
+            }
+        }
+    }
 }
