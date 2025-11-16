@@ -171,7 +171,7 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Removes a <see cref="Toxic"/> from the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="name">Name of the <see cref="Toxic"/> we want to remove.</param>
+        /// <param name="name">Name of the <see cref="Toxic"/> to remove.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyException"></exception>
         public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
@@ -188,18 +188,29 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Add a <see cref="LatencyToxic"/> to the <see cref="Proxy"/>.
+        /// Configures a <see cref="LatencyToxic"/> on the <see cref="Proxy"./>.
         /// </summary>
-        /// <param name="name">Name of the <see cref="Toxic"> to create.</param>
-        /// <param name="direction">Working direction of the <see cref="Toxic"/> (upstream or downstream).</param>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="LatencyToxic"/>.</returns>
         public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
         {
-            var toxic = new LatencyToxic();
+            LatencyToxic toxic = new();
             builder(toxic);
             return (LatencyToxic)await CreateToxicAsync(toxic, cancellationToken);
+        }
+
+        /// <summary>
+        /// Configures a <see cref="BandwidthToxic" on the <see cref="Proxy". />
+        /// </summary>
+        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="BandwidthToxic"/>.</returns>
+        public async Task<BandwidthToxic> AddBandwidthToxicAsync(Action<BandwidthToxic> builder, CancellationToken cancellationToken = default)
+        {
+            BandwidthToxic toxic = new();
+            builder(toxic);
+            return (BandwidthToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
