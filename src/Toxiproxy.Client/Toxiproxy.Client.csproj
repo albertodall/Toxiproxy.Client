@@ -3,8 +3,26 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+
+	<!-- Package metadata -->
+	<PackageId>Toxiproxy.Client</PackageId>
+	<Authors>Alberto Dallagiacoma</Authors>
+	<Description>A .NET Standard 2.0 client library for Toxiproxy</Description>
+	<PackageTags>toxiproxy;chaos;testing;resilience;proxy</PackageTags>
+	<PackageProjectUrl>https://github.com/albertodall/Toxiproxy.Client</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/albertodall/Toxiproxy.Client</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageIcon>icon.png</PackageIcon>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+	<None Include="../../icon.png" Pack="true" PackagePath="\" />
+	<None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+	
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>

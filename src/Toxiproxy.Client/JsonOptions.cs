@@ -21,7 +21,7 @@ namespace Toxiproxy.Client
     }
 
     /// <summary>
-    /// Deserializes the version information from the Toxiproxy server response in a <see cref="Version" object/>.
+    /// Deserializes the version information from the Toxiproxy server response in a <see cref="Version"/> object.
     /// This is useful for checking for the compatibility between the client API and the Toxiproxy server.
     /// </summary>
     /// <remarks>

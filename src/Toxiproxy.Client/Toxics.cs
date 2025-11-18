@@ -237,6 +237,9 @@ namespace Toxiproxy.Client
             : base(configuration)
         { }
 
+        /// <summary>
+        /// Number of bytes it should transmit before connection is closed.
+        /// </summary>
         public int Bytes 
         { 
             get => GetAttribute<int>("bytes");
@@ -259,7 +262,7 @@ namespace Toxiproxy.Client
     /// </summary>
     public sealed class ResetPeerToxic : Toxic
     {
-        public ResetPeerToxic() 
+        internal ResetPeerToxic() 
             : base(ToxicType.ResetPeer)
         { }
 

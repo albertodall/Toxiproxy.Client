@@ -9,6 +9,7 @@ namespace Toxiproxy.Client
     /// </summary>
     public abstract class Toxic
     {
+        /// <inheritdoc />
         protected Toxic(string toxicType)
         {
             Name = $"{toxicType}_{Stream}";
@@ -97,6 +98,7 @@ namespace Toxiproxy.Client
             return default!;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var attributes = string.Join(", ", Attributes.Select(kvp => $"{kvp.Key}={kvp.Value}"));

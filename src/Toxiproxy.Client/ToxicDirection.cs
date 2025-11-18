@@ -12,9 +12,17 @@
             _direction = direction;
         }
 
+        /// <summary>
+        /// Toxic is working upstream.
+        /// </summary>
         public static ToxicDirection Upstream => new("upstream");
+
+        /// <summary>
+        /// Toxic is working downstream.
+        /// </summary>
         public static ToxicDirection Downstream => new("downstream");
 
+        /// <inheritdoc />
         public static implicit operator ToxicDirection(string value)
         {
             string direction = value.ToLowerInvariant();
@@ -26,8 +34,10 @@
             return new ToxicDirection(direction);
         }
 
+        /// <inheritdoc />
         public static implicit operator string(ToxicDirection direction) => direction.ToString();
 
+        /// <inheritdoc />
         public override string ToString() => _direction;
     }
 }

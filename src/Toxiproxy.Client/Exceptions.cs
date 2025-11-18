@@ -5,7 +5,10 @@
     /// </summary>
     public class ToxiproxyException : Exception
     {
+        /// <inheritdoc />
         public ToxiproxyException(string message) : base(message) { }
+
+        /// <inheritdoc />
         public ToxiproxyException(string message, Exception innerException) : base(message, innerException) { }
     }
 
@@ -14,6 +17,7 @@
     /// </summary>
     public sealed class ProxyNotFoundException : ToxiproxyException
     {
+        /// <inheritdoc />
         public ProxyNotFoundException(string message)
             : base(message) 
         { }
@@ -24,12 +28,16 @@
     /// </summary>
     public sealed class ProxyConfigurationException : ToxiproxyException
     {
+        /// <inheritdoc />
         public ProxyConfigurationException(string propertyName, string message)
             : base($"Invalid proxy configuration: Parameter '{propertyName}' has an invalid value. {message}")
         { 
             PropertyName = propertyName;
         }
 
+        /// <summary>
+        /// Name of the parameter containing the error.
+        /// </summary>
         public string PropertyName { get; }
     }
 
@@ -38,12 +46,16 @@
     /// </summary>
     public sealed class ToxicConfigurationException : ToxiproxyException
     {
+        /// <inheritdoc />
         public ToxicConfigurationException(string propertyName, string message)
             : base($"Invalid toxic configuration: Parameter '{propertyName}' has an invalid value. {message}")
         { 
             PropertyName = propertyName;
         }
 
+        /// <summary>
+        /// Name of the parameter containing the error.
+        /// </summary>
         public string PropertyName { get; }
      }
 }

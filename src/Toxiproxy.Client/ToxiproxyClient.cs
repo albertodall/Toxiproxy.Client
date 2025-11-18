@@ -72,7 +72,7 @@ namespace Toxiproxy.Client
         /// HttpClient instance used for all communications with the Toxiproxy server.
         /// </summary>
         /// <remarks>
-        /// <see cref="https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"/>
+        /// <see href="https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"/>
         /// </remarks>
         internal static readonly HttpClient HttpClient = new()
         {

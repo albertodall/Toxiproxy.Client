@@ -7,7 +7,6 @@
             /// <summary>
             /// Returns a serializer-friendly configuration of a <see cref="Proxy"/>.
             /// </summary>
-            /// <param name="proxy">The <see cref="Proxy"/>.</param>
             public ProxyConfiguration GetConfiguration()
             {
                 return new ProxyConfiguration()
@@ -26,7 +25,6 @@
             /// <summary>
             /// Returns a serializer-friendly configuration of a <see cref="Toxic"/>.
             /// </summary>
-            /// <param name="toxic">The <see cref="Toxic"/>.</param>
             public ToxicConfiguration GetConfiguration()
             {
                 return new ToxicConfiguration()
