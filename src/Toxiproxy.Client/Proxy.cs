@@ -13,8 +13,6 @@ namespace Toxiproxy.Client
     {
         private readonly ToxiproxyClient _client;
 
-        private string _upstream = string.Empty;
-
         internal Proxy(ToxiproxyClient client)
         { 
             _client = client;
@@ -31,7 +29,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Name of the <see cref="Proxy"/>."/>
+        /// Name of the <see cref="Proxy"/>.
         /// </summary>
         /// <remarks>
         /// Once created, the name of the proxy cannot be changed.
@@ -70,7 +68,7 @@ namespace Toxiproxy.Client
         } = string.Empty;
 
         /// <summary>
-        /// Address or hostname of the upstream service of the <see cref="Proxy"/>."/>
+        /// Address or hostname of the upstream service of the <see cref="Proxy"/>.
         /// </summary>
         public string Upstream
         {
@@ -94,7 +92,7 @@ namespace Toxiproxy.Client
         public bool Enabled { get; private set; } = true;
 
         /// <summary>
-        /// List of <see cref="Toxic"/>s configured on the <see cref="Proxy"/>."/>
+        /// List of <see cref="Toxic"/>s configured on the <see cref="Proxy"/>.
         /// </summary>
         public IReadOnlyCollection<Toxic> Toxics { get; private set; } = [];
 
@@ -190,91 +188,91 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Configures a <see cref="LatencyToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="LatencyToxic"/>.</returns>
-        public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<LatencyToxic> AddLatencyToxicAsync(Action<LatencyToxic> config, CancellationToken cancellationToken = default)
         {
             LatencyToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (LatencyToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="BandwidthToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="BandwidthToxic"/>.</returns>
-        public async Task<BandwidthToxic> AddBandwidthToxicAsync(Action<BandwidthToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<BandwidthToxic> AddBandwidthToxicAsync(Action<BandwidthToxic> config, CancellationToken cancellationToken = default)
         {
             BandwidthToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (BandwidthToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="TimeoutToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="TimeoutToxic"/>.</returns>
-        public async Task<TimeoutToxic> AddTimeoutToxicAsync(Action<TimeoutToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<TimeoutToxic> AddTimeoutToxicAsync(Action<TimeoutToxic> config, CancellationToken cancellationToken = default)
         {
             TimeoutToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (TimeoutToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="SlowCloseToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="SlowCloseToxic"/>.</returns>
-        public async Task<SlowCloseToxic> AddSlowCloseToxicAsync(Action<SlowCloseToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<SlowCloseToxic> AddSlowCloseToxicAsync(Action<SlowCloseToxic> config, CancellationToken cancellationToken = default)
         {
             SlowCloseToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (SlowCloseToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="SlicerToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="SlicerToxic"/>.</returns>
-        public async Task<SlicerToxic> AddSlicerToxicAsync(Action<SlicerToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<SlicerToxic> AddSlicerToxicAsync(Action<SlicerToxic> config, CancellationToken cancellationToken = default)
         {
             SlicerToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (SlicerToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="LimitDataToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="LimitDataToxic"/>.</returns>
-        public async Task<LimitDataToxic> AddLimitDataToxicAsync(Action<LimitDataToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<LimitDataToxic> AddLimitDataToxicAsync(Action<LimitDataToxic> config, CancellationToken cancellationToken = default)
         {
             LimitDataToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (LimitDataToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
         /// <summary>
         /// Configures a <see cref="ResetPeerToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="builder">Toxic configuration.</param>
+        /// <param name="config">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The <see cref="ResetPeerToxic"/>.</returns>
-        public async Task<ResetPeerToxic> AddResetPeerToxicAsync(Action<ResetPeerToxic> builder, CancellationToken cancellationToken = default)
+        public async Task<ResetPeerToxic> AddResetPeerToxicAsync(Action<ResetPeerToxic> config, CancellationToken cancellationToken = default)
         {
             ResetPeerToxic toxic = new();
-            builder(toxic);
+            config(toxic);
             return (ResetPeerToxic)await CreateToxicAsync(toxic, cancellationToken);
         }
 
@@ -398,7 +396,7 @@ namespace Toxiproxy.Client
         /// Starting from version 2.6.0, Toxiproxy server supports HTTP PATCH method for proxy updates, 
         /// and started deprecating updates using HTTP POST. 
         /// HTTP POST for updates won't be allowed anymore starting from version 3.0.0.
-        /// This property allows choose the supported update HTTP method according to the detected version, 
+        /// This property allows choosing the supported update HTTP method according to the detected version, 
         /// and we can support both ways without breaking.
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
