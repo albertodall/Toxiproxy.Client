@@ -120,10 +120,10 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Reads current configuration of a <see cref="Toxic"/>.
         /// </summary>
-        /// <typeparam name="T">Type of the <see cref="Toxic"> we're interested in.</typeparam>
+        /// <typeparam name="T">Type of the <see cref="Toxic"/> we're interested in.</typeparam>
         /// <param name="name">Name of the <see cref="Toxic"/> we're interested in.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The instance of the <see cref="Toxic"/> configured on the server, or <see langword="null"> if the toxic with the specified name does not exist.</returns>
+        /// <returns>The instance of the <see cref="Toxic"/> configured on the server, or <see langword="null"/> if the toxic with the specified name does not exist.</returns>
         public async Task<T?> GetToxicAsync<T>(string name, CancellationToken cancellationToken = default) where T : Toxic
         {
             var response = await ToxiproxyClient.HttpClient.GetAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
@@ -188,7 +188,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="LatencyToxic"/> on the <see cref="Proxy"./>.
+        /// Configures a <see cref="LatencyToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -201,7 +201,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="BandwidthToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="BandwidthToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -214,7 +214,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="TimeoutToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="TimeoutToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -227,7 +227,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="SlowCloseToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="SlowCloseToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -240,7 +240,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="SlicerToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="SlicerToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -253,7 +253,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="LimitDataToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="LimitDataToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -266,7 +266,7 @@ namespace Toxiproxy.Client
         }
 
         /// <summary>
-        /// Configures a <see cref="ResetPeerToxic" on the <see cref="Proxy". />
+        /// Configures a <see cref="ResetPeerToxic"/> on the <see cref="Proxy"/>.
         /// </summary>
         /// <param name="builder">Toxic configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -402,7 +402,7 @@ namespace Toxiproxy.Client
         /// and we can support both ways without breaking.
         /// <see href="https://github.com/Shopify/toxiproxy/blob/main/CHANGELOG.md#260---2023-08-22">See Toxiproxy changelog.</see>
         /// </summary>
-        /// <returns>Returns <see cref="true"/> if server version is 2.6.0 or above.</returns>
+        /// <returns>Returns <see langword="true"/> if server version is 2.6.0 or above.</returns>
         /// <remarks>
         /// The version check is needed, because if you use HTTP PATCH method on servers below 2.6.0, you get a "405 Method Not Allowed" response.
         /// </remarks>
