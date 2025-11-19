@@ -116,7 +116,7 @@
 
             var toxic = await sut.AddLatencyToxicAsync(toxic => toxic.Jitter = 20, TestContext.Current.CancellationToken);
 
-            await sut.RemoveToxicAsync(toxic.Name, TestContext.Current.CancellationToken);
+            await sut.RemoveToxicAsync(toxic, TestContext.Current.CancellationToken);
 
             Assert.Empty(sut.Toxics);
         }
