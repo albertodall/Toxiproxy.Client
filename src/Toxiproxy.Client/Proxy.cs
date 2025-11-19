@@ -169,19 +169,19 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Removes a <see cref="Toxic"/> from the <see cref="Proxy"/>.
         /// </summary>
-        /// <param name="name">Name of the <see cref="Toxic"/> to remove.</param>
+        /// <param name="toxic"><see cref="Toxic"/> to remove.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyException"></exception>
-        public async Task RemoveToxicAsync(string name, CancellationToken cancellationToken = default)
+        public async Task RemoveToxicAsync(Toxic toxic, CancellationToken cancellationToken = default)
         {
             try
             {
-                await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{name}", cancellationToken);
+                await ToxiproxyClient.HttpClient.DeleteAsync($"{_client.BaseUrl}/proxies/{Name}/toxics/{toxic.Name}", cancellationToken);
                 await GetActiveToxicsAsync(cancellationToken);
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyException($"Failed to remove toxic '{name}' on proxy '{Name}'", ex);
+                throw new ToxiproxyException($"Failed to remove toxic '{toxic.Name}' on proxy '{Name}'", ex);
             }
         }
 

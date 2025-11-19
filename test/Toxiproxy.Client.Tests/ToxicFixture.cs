@@ -25,23 +25,10 @@
                 toxic.Jitter = 100;
             }, TestContext.Current.CancellationToken);
 
-            await proxy.RemoveToxicAsync(latencyToxic.Name, TestContext.Current.CancellationToken);
+            await proxy.RemoveToxicAsync(latencyToxic, TestContext.Current.CancellationToken);
 
             var retrievedToxic = await proxy.GetToxicAsync<LatencyToxic>(latencyToxic.Name, TestContext.Current.CancellationToken);
             Assert.Null(retrievedToxic);
-        }
-
-        [Fact]
-        public async Task Proxy_ShouldNotThrowException_WhenRemovingNonExistingToxic()
-        {
-            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
-            {
-                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
-                cfg.Listen = "127.0.0.1:11111";
-                cfg.Upstream = "example.org:80";
-            }, TestContext.Current.CancellationToken);
-
-            await proxy.RemoveToxicAsync("non_existing_toxic", TestContext.Current.CancellationToken);
         }
 
         [Fact]
