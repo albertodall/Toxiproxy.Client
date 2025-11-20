@@ -1,0 +1,15 @@
+services:
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    container_name: toxiproxy
+    environment:
+      - LOG_LEVEL=debug
+    ports:
+      - "8474:8474"
+      - "8666-8676:8666-8676"
+  
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
