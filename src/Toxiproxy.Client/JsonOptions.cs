@@ -3,6 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace Toxiproxy.Client
 {
+    [JsonSerializable(typeof(ProxyConfiguration))]
+    [JsonSerializable(typeof(Dictionary<string, ProxyConfiguration>))]
+    [JsonSerializable(typeof(ToxicConfiguration[]))]
+    [JsonSerializable(typeof(Version))]
+    [JsonSerializable(typeof(int))]
+    internal sealed partial class SourceGenerationContext : JsonSerializerContext { }
+
     /// <summary>
     /// Default json serialization options.
     /// </summary>
@@ -10,9 +17,10 @@ namespace Toxiproxy.Client
     {
         public static readonly JsonSerializerOptions Default = new()
         {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            TypeInfoResolver = SourceGenerationContext.Default,
             Converters =
             {
                 new VersionConverter()
