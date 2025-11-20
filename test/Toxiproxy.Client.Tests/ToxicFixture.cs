@@ -47,8 +47,37 @@
                 toxic.Jitter = 100;
             }, TestContext.Current.CancellationToken);
 
-            Assert.Equal($"latency_downstream", latencyToxic.Name);
-            Assert.Equal($"downstream", latencyToxic.Stream);
+            LatencyToxic? retrievedToxic = await proxy.GetToxicAsync<LatencyToxic>(latencyToxic.Name, TestContext.Current.CancellationToken);
+            Assert.NotNull(retrievedToxic);
+            Assert.Equal(latencyToxic.Name, retrievedToxic.Name);
+            Assert.Equal(latencyToxic.Stream, retrievedToxic.Stream);
+            Assert.Equal(latencyToxic.Toxicity, retrievedToxic.Toxicity);
+        }
+
+        [Fact]
+        public async Task Proxy_ShouldCreateToxic_WithCustomValues()
+        {
+            Proxy proxy = await _client.ConfigureProxyAsync(cfg =>
+            {
+                cfg.Name = $"test_proxy_{Guid.NewGuid()}";
+                cfg.Listen = "127.0.0.1:11111";
+                cfg.Upstream = "example.org:80";
+            }, TestContext.Current.CancellationToken);
+
+            LatencyToxic latencyToxic = await proxy.AddLatencyToxicAsync(toxic =>
+            {
+                toxic.Name = "custom_latency";
+                toxic.Stream = "upstream";
+                toxic.Toxicity = 0.3f;
+                toxic.Latency = 2000;
+                toxic.Jitter = 150;
+            }, TestContext.Current.CancellationToken);
+
+            LatencyToxic? retrievedToxic = await proxy.GetToxicAsync<LatencyToxic>(latencyToxic.Name, TestContext.Current.CancellationToken);
+            Assert.NotNull(retrievedToxic);
+            Assert.Equal(latencyToxic.Name, retrievedToxic.Name);
+            Assert.Equal(latencyToxic.Stream, retrievedToxic.Stream);
+            Assert.Equal(latencyToxic.Toxicity, retrievedToxic.Toxicity);
         }
 
         public ValueTask InitializeAsync() => ValueTask.CompletedTask;

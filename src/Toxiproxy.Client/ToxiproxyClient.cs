@@ -82,13 +82,13 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Configures a new proxy on the Toxiproxy server.
         /// </summary>
-        /// <param name="builder">Proxy configuration.</param>
+        /// <param name="config">Proxy configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The configured proxy.</returns>
-        public async Task<Proxy> ConfigureProxyAsync(Action<Proxy> builder, CancellationToken cancellationToken = default)
+        public async Task<Proxy> ConfigureProxyAsync(Action<Proxy> config, CancellationToken cancellationToken = default)
         {
             var newProxy = new Proxy(this);
-            builder(newProxy);
+            config(newProxy);
             newProxy.EnsureConfigurationIsValid();
 
             try
