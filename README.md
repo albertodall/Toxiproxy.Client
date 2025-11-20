@@ -1,10 +1,11 @@
 # Toxiproxy.Client
 
-A .NET library for interacting with [Shopify's Toxiproxy](https://github.com/Shopify/toxiproxy), a TCP proxy for simulating network conditions and chaos testing.
+A .NET library for interacting with [Shopify's Toxiproxy](https://github.com/Shopify/toxiproxy), a TCP proxy for simulating network conditions and chaos testing.  
+The library targets [.NET Standard 2.0](https://learn.microsoft.com/it-it/dotnet/standard/net-standard?tabs=net-standard-2-0), so ita can be used in .NET Framework 4.6.1 onwards and in .NET/.NET Core projects.
 
 ## About
 
-Toxiproxy.Client provides a simple and intuitive .NET interface for communicating with the [Toxiproxy HTTP API](https://github.com/Shopify/toxiproxy?tab=readme-ov-file#http-api). This library enables you to test your application's resilience by simulating various network failure scenarios such as latency, timeouts, bandwidth limitations, and connection failures.
+_Toxiproxy.Client_ provides a simple and intuitive .NET interface for communicating with the [Toxiproxy HTTP API](https://github.com/Shopify/toxiproxy?tab=readme-ov-file#http-api). This library enables you to test your application's resilience by simulating various network failure scenarios such as latency, timeouts, bandwidth limitations, and connection failures.
 
 ### What is Toxiproxy?
 
@@ -49,7 +50,7 @@ The library supports Toxiproxy server from version 2.0.0 onwards.
 
 ### Creating a client connection to the server
 
-First of all you need to create an instance of the  `ToxiproxyClient` object, that allows the interaction with the server.
+First of all you need to create an instance of the `ToxiproxyClient` object, that allows the interaction with the server.
 By default the client connects to the instance running on `localhost` on port `8474`.
 
 ```csharp
@@ -64,26 +65,26 @@ ToxiproxyClient client = await ToxiproxyClient.ConnectAsync("my-toxiproxy.domain
 
 ### Creating a proxy on the server
 
-Once you have a connection, you can create a _proxy_ towards another service on the network.  
-This example creates a proxy in front of a SQL Server running on the same network:
+Once you have a client connection, you can create a _proxy_ towards another service on the network.  
+This example creates a proxy in front of a [MSSQL Server](https://www.microsoft.com/sql-server) running on the same network:
 
 ```csharp
 Proxy mssqlProxy = await client.ConfigureProxyAsync(cfg =>
 {
     cfg.Name = "mssql_proxy";
-    cfg.Listen = "127.0.0.1:11433";
+    cfg.Listen = "0.0.0.0:11433";
     cfg.Upstream = "mssql.domain.local:1433";
 });
 ```
 
 It's possible to create more than one proxy on the same server; in general, you create a proxy for each service you need to test.  
-This example adds a proxy for a Redis server running on the same network:
+This example adds a proxy for a [Redis](https://redis.io/) server running on the same network:
 
 ```csharp
 Proxy redisProxy = await client.ConfigureProxyAsync(cfg =>
 {
     cfg.Name = "redis_proxy";
-    cfg.Listen = "127.0.0.1:16379";
+    cfg.Listen = "0.0.0.0:16379";
     cfg.Upstream = "redis.domain.local:6379";
 });
 ```
@@ -103,7 +104,7 @@ await redisProxy.EnableAsync();
 ### Adding toxics
 
 Once we have a proxy configured, we can add _toxics_ to is, in order to simulate connection issues.  
-This example adds a _latency_ toxic to the MS SQL proxy, so to simulate a network latency while connecting to it:
+This example adds a [latency](https://github.com/Shopify/toxiproxy#latency) toxic to the MSSQL proxy, so to simulate a 1s network latency while interacting with it:
 
 ```csharp
 LatencyToxic latency = await mssqlProxy.AddLatencyToxicAsync(cfg => 
@@ -113,7 +114,7 @@ LatencyToxic latency = await mssqlProxy.AddLatencyToxicAsync(cfg =>
 });
 ```
 
-Here we're adding a _timeout_ toxic to the Redis proxy, so to simulate a network timeout after 1 second:
+Here we're adding a [timeout](https://github.com/Shopify/toxiproxy#timeout) toxic to the Redis proxy, so to simulate a network timeout after 1 second:
 
 ```csharp
 TimeoutToxic timeout = await redisProxy.AddTimeoutToxicAsync(cfg =>
@@ -122,8 +123,8 @@ TimeoutToxic timeout = await redisProxy.AddTimeoutToxicAsync(cfg =>
 });
 ```
 
-Toxics can work both **upstream** or **downstream**; if not specified, a toxic works downstream.  
-In this example we add a _bandwidth_ toxic to the MSSQL proxy so to limit the upstream bandwidth to 10 KB/s:
+Toxics can work either **upstream** or **downstream**; if not specified, a toxic works downstream by default.  
+In this example we add a [bandwidth](https://github.com/Shopify/toxiproxy#bandwidth) toxic to the MSSQL proxy so to limit the upstream bandwidth to 10 KB/s:
 
 ```csharp
 BandwidthToxic bandwidth = await mssqlProxy.AddBandwidthToxicAsync(cfg =>
@@ -135,13 +136,13 @@ BandwidthToxic bandwidth = await mssqlProxy.AddBandwidthToxicAsync(cfg =>
 
 ### Removing toxics
 
-Toxics on a proxy can be removed simply doing:
+Toxics on a proxy can be removed by doing:
 
 ```csharp
 await redisProxy.RemoveToxicAsync(timeout);
 ```
 
-Here we remove the _timeout_ toxic from the Redis proxy.
+In this example, we remove the [timeout](https://github.com/Shopify/toxiproxy#timeout) toxic from the Redis proxy.
 
 ### Reset server
 
@@ -151,4 +152,24 @@ If you need to reset the Toxiproxy server configuration, you can use:
 await client.ResetAsync();
 ```
 
-This way, you enable all  proxies on th server and remove all active toxics.
+This way, you enable/re-enable all proxies on the server and remove all active toxics on all proxies.
+
+## Code sample
+
+In the _sample_ folder you can find a usage example of this library.  
+The sample consists in proxying a [Redis](https://redis.io/) instance through Toxiproxy, and reading values from it while Toxiproxy tampers the connection.  
+Both Toxiproxy and Redis are set up using containers.
+
+### Code sample prerequisites
+
+- [Docker](https://www.docker.com/)
+- [.NET SDK 10.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+
+### Running the sample
+
+```bash
+cd sample
+docker compose up -d
+dotnet toxiproxy-client-sample.cs
+docker compose down
+```
