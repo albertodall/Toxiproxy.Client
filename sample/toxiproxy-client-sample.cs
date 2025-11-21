@@ -1,7 +1,6 @@
 #!/usr/bin/env dotnet
 
 #:property ManagePackageVersionsCentrally=false
-#:property JsonSerializerIsReflectionEnabledByDefault=true
 
 #:project ../src/Toxiproxy.Client/Toxiproxy.Client.csproj
 #:package StackExchange.Redis@2.10.1
