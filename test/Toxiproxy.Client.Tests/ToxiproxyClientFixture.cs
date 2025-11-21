@@ -164,6 +164,7 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Theory]
+        [InlineData("")]
         [InlineData("invalid_address")]
         [InlineData("10.10:8080")]
         [InlineData("10.11.12:80")]
@@ -171,6 +172,10 @@ namespace Toxiproxy.Client.Tests
         [InlineData("127.0.0.1")]
         [InlineData(":8080")]
         [InlineData("256.0.0.1:80")]
+        [InlineData("256.10.0.1:80")]
+        [InlineData("10.256.0.1:80")]
+        [InlineData("10.10.256.1:80")]
+        [InlineData("10.10.10.256:80")]
         [InlineData("256.256.256.256:80")]
         public async Task Client_Should_ThrowException_WhenListeningAddressIsInvalid(string listeningAddress)
         {
@@ -188,13 +193,17 @@ namespace Toxiproxy.Client.Tests
         }
 
         [Theory]
+        [InlineData("")]
         [InlineData("invalid_address")]
         [InlineData("10.10:8080")]
         [InlineData("10.11.12:80")]
         [InlineData("127.0.0.180")]
         [InlineData("127.0.0.1")]
         [InlineData(":8080")]
-        [InlineData("256.0.0.1:80")]
+        [InlineData("256.10.0.1:80")]
+        [InlineData("10.256.0.1:80")]
+        [InlineData("10.10.256.1:80")]
+        [InlineData("10.10.10.256:80")]
         [InlineData("256.256.256.256:80")]
         public async Task Client_Should_ThrowException_WhenUpstreamAddressIsInvalid(string upstreamAddress)
         {
