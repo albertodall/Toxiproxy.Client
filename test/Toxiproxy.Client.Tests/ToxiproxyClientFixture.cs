@@ -80,16 +80,10 @@ namespace Toxiproxy.Client.Tests
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            await _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
+            await _sut.DeleteProxyAsync(proxy, TestContext.Current.CancellationToken);
 
             var existingProxy = await _sut.GetProxyAsync(proxy.Name, TestContext.Current.CancellationToken);
             Assert.Null(existingProxy);
-        }
-
-        [Fact]
-        public async Task Client_ShouldNotThrowException_WhenDeletingNonExistingProxy()
-        {
-            await _sut.DeleteProxyAsync("non_existing_proxy", TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -254,7 +248,7 @@ namespace Toxiproxy.Client.Tests
         public async ValueTask DisposeAsync()
         {
             var proxies = await _sut.GetProxiesAsync(TestContext.Current.CancellationToken);
-            await Task.WhenAll(proxies.Select(proxy => _sut.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken)));
+            await Task.WhenAll(proxies.Select(p => _sut.DeleteProxyAsync(p, TestContext.Current.CancellationToken)));
         }
     }
 }

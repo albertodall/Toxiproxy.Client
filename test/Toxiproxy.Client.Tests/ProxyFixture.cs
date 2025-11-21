@@ -77,16 +77,10 @@
                 cfg.Upstream = "example.org:80";
             }, TestContext.Current.CancellationToken);
 
-            await _client.DeleteProxyAsync(sut.Name, TestContext.Current.CancellationToken);
+            await _client.DeleteProxyAsync(sut, TestContext.Current.CancellationToken);
 
             var deletedProxy = await _client.GetProxyAsync(sut.Name, TestContext.Current.CancellationToken);
             Assert.Null(deletedProxy);
-        }
-
-        [Fact]
-        public async Task DeleteProxy_ShouldNotThrowException_WhenProxyDoesNotExists()
-        {
-            await _client.DeleteProxyAsync("non_existing_proxy", TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -126,7 +120,7 @@
         public async ValueTask DisposeAsync()
         {
             var proxies = await _client.GetProxiesAsync(TestContext.Current.CancellationToken);
-            await Task.WhenAll(proxies.Select(proxy => _client.DeleteProxyAsync(proxy.Name, TestContext.Current.CancellationToken)));
+            await Task.WhenAll(proxies.Select(p => _client.DeleteProxyAsync(p, TestContext.Current.CancellationToken)));
         }
     }
 }

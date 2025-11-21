@@ -162,7 +162,7 @@
         public async ValueTask DisposeAsync()
         {
             var proxies = await _client.GetProxiesAsync(TestContext.Current.CancellationToken);
-            await Task.WhenAll(proxies.Select(p => _client.DeleteProxyAsync(p.Name, TestContext.Current.CancellationToken)));
+            await Task.WhenAll(proxies.Select(p => _client.DeleteProxyAsync(p, TestContext.Current.CancellationToken)));
         }
     }
 }

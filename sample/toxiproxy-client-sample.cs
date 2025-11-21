@@ -43,4 +43,4 @@ Console.WriteLine($"Value from proxied Redis with latency. It should have taken 
 
 // Cleanup
 Console.WriteLine("Cleaning up...");
-await client.DeleteProxyAsync("redis");
+await client.DeleteProxyAsync(redisProxy);

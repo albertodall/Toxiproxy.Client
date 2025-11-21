@@ -173,18 +173,18 @@ namespace Toxiproxy.Client
         /// <summary>
         /// Deletes the specified proxy from the server.
         /// </summary>
-        /// <param name="name">The name of the proxy to delete.</param>
+        /// <param name="proxy">The <see cref="Proxy"/> to delete.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <exception cref="ToxiproxyException">Thrown if there is an error while connecting to the server.</exception>
-        public Task DeleteProxyAsync(string name, CancellationToken cancellationToken = default)
+        public Task DeleteProxyAsync(Proxy proxy, CancellationToken cancellationToken = default)
         {
             try
             {
-                return HttpClient.DeleteAsync($"{BaseUrl}/proxies/{name}", cancellationToken);
+                return HttpClient.DeleteAsync($"{BaseUrl}/proxies/{proxy.Name}", cancellationToken);
             }
             catch (HttpRequestException ex)
             {
-                throw new ToxiproxyException($"Failed to delete proxy '{name}' from server {BaseUrl}", ex);
+                throw new ToxiproxyException($"Failed to delete proxy '{proxy.Name}' from server {BaseUrl}", ex);
             }
         }
 
