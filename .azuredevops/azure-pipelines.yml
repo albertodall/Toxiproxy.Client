@@ -6,6 +6,13 @@ trigger:
   tags:
     include:
     - v*
+  paths:
+    exclude:
+    - '*.yml'
+    - global.json
+    - sample/**
+    - LICENSE
+    - README.md
 
 pr:
   branches:
