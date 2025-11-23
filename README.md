@@ -20,7 +20,7 @@ Toxiproxy is a framework specifically designed for testing, CI, and development 
 
 ### Toxics
 
-The library supports all these [toxics](https://github.com/Shopify/toxiproxy?tab=readme-ov-file#toxics).
+[This is the list](https://github.com/Shopify/toxiproxy?tab=readme-ov-file#toxics) of all supported toxics, together with all the meaningful parameters for each toxic.
 
 ## Installation
 
@@ -65,7 +65,7 @@ ToxiproxyClient client = await ToxiproxyClient.ConnectAsync("my-toxiproxy.domain
 
 ### Creating a proxy on the server
 
-Once you have a client connection, you can create a _proxy_ towards another service on the network.  
+Once you have a client connection, you can use Toxiproxy to proxy another service on the network.  
 This example creates a proxy in front of a [MSSQL Server](https://www.microsoft.com/sql-server) running on the same network:
 
 ```csharp
@@ -103,7 +103,7 @@ await redisProxy.EnableAsync();
 
 ### Adding toxics
 
-Once we have a proxy configured, we can add _toxics_ to is, in order to simulate connection issues.  
+Once we have a proxy configured, we can add _toxics_ to it, and tamper the connection in some way.  
 This example adds a [latency](https://github.com/Shopify/toxiproxy#latency) toxic to the MSSQL proxy, so to simulate a 1s network latency while interacting with it:
 
 ```csharp
@@ -124,13 +124,13 @@ TimeoutToxic timeout = await redisProxy.AddTimeoutToxicAsync(cfg =>
 ```
 
 Toxics can work either **upstream** or **downstream**; if not specified, a toxic works downstream by default.  
-In this example we add a [bandwidth](https://github.com/Shopify/toxiproxy#bandwidth) toxic to the MSSQL proxy so to limit the upstream bandwidth to 10 KB/s:
+In this example we add a [bandwidth](https://github.com/Shopify/toxiproxy#bandwidth) toxic to the MSSQL proxy, so to limit the upstream bandwidth to 10 KB/s:
 
 ```csharp
 BandwidthToxic bandwidth = await mssqlProxy.AddBandwidthToxicAsync(cfg =>
 {
     cfg.Rate = 10;
-    cfg.Stream = ToxicStream.Upstream;
+    cfg.Stream = ToxicDirection.Upstream;
 });
 ```
 
@@ -156,7 +156,7 @@ This way, you enable/re-enable all proxies on the server and remove all active t
 
 ## Code sample
 
-In the _sample_ folder you can find a usage example of this library.  
+In the [sample](https://github.com/albertodall/Toxiproxy.Client/tree/main/sample) folder you can find a usage example of this library.  
 The sample consists in proxying a [Redis](https://redis.io/) instance through Toxiproxy, and reading values from it while Toxiproxy tampers the connection.  
 Both Toxiproxy and Redis are set up using containers.
 
