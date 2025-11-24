@@ -32,7 +32,7 @@ stages:
 - stage: Build
   displayName: 'Build and test'
   jobs:
-  - job: Build
+  - job: BuildJob
     displayName: 'Build library and run tests'
     steps:
     - checkout: self
@@ -62,6 +62,7 @@ stages:
           echo "##vso[task.setvariable variable=IsPreviewVersion;isOutput=true]true"
         else
           echo "Building a stable version"
+          echo "##vso[task.setvariable variable=IsPreviewVersion;isOutput=true]false"
         fi
       name: CalculatePackageVersion
       displayName: 'Calculate package version'
@@ -120,3 +121,80 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'NuGetPackage'
         publishLocation: 'pipeline'
+
+- stage: PublishRelease
+  displayName: 'Publish package to NuGet.org'
+  dependsOn: Build
+  condition: |
+    and(
+      succeeded(), 
+      ne(variables['Build.Reason'], 'PullRequest'),
+      or(
+        eq(variables['Build.Reason'], 'Manual'),
+
+        and(
+          eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+          eq(dependencies.Build.outputs['BuildJob.CalculatePackageVersion.IsPreview'], 'true')
+        ),
+
+        and(
+          startsWith(variables['Build.SourceBranch'], 'refs/tags/v'),
+          eq(dependencies.Build.outputs['BuildJob.CalculatePackageVersion.IsPreview'], 'false')
+        )
+      )
+    )
+  variables:
+    PackageVersion: $[ stageDependencies.Build.BuildJob.outputs['CalculatePackageVersion.PackageVersion'] ]
+  jobs:
+  - deployment: PublishNuGet
+    displayName: 'Publish to NuGet.org'
+    environment:
+      name: 'NuGet Feed'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: none
+          
+          - download: current
+            artifact: NuGetPackage
+            displayName: 'Download artifacts'
+
+          - bash: |
+              PACKAGE_VERSION="${VERSION#v}"
+              PACKAGE_ID=$(echo "ToxiProxy.Client" | tr '[:upper:]' '[:lower:]')
+              NUGET_PACKAGE_URL="https://api.nuget.org/v3-flatcontainer/$PACKAGE_ID/$PACKAGE_VERSION/$PACKAGE_ID.nuspec"
+
+              echo "Checking on NuGet.org for package URL: $NUGET_PACKAGE_URL"
+              if curl -s --fail "$NUGET_PACKAGE_URL" > /dev/null; then
+                echo "Version $VERSION already exists on NuGet.org"
+                echo "##vso[task.setvariable variable=VersionExistsOnNuGet;isOutput=true]true"
+              else
+                echo "Version $VERSION does NOT exist on NuGet.org"
+                echo "##vso[task.setvariable variable=VersionExistsOnNuGet;isOutput=true]false"
+              fi
+            env:
+              VERSION: $(PackageVersion)
+            name: NuGetVersionCheck
+            displayName: 'Check if version exists on NuGet.org'
+          
+          - task: NuGetCommand@2
+            displayName: 'Push to NuGet.org'
+            condition:
+              and(
+                eq($(NuGetVersionCheck.VersionExistsOnNuGet), 'false'),
+                and(
+                  eq(variables['Build.Reason'], 'Manual'),
+                  or(
+                    eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+                    startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
+                    startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+                  )
+                )
+              )
+            inputs:
+              command: 'push'
+              packagesToPush: '$(Pipeline.Workspace)/NuGetPackage/*.*pkg'
+              nuGetFeedType: 'external'
+              publishFeedCredentials: '$(NuGetServiceConnection)'
+              allowPackageConflicts: false
