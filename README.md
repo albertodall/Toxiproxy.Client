@@ -181,3 +181,7 @@ docker compose up -d
 dotnet toxiproxy-client-sample.cs
 docker compose down
 ```
+
+## Development and Release
+
+Check the [Project's wiki](../../wiki/1.-Development-and-Release-Strategy).
